@@ -1,0 +1,219 @@
+:root {
+  --bg: #0c0a13;
+  --bg-panel: #14111f;
+  --border: #2a2438;
+  --text: #f1ecf7;
+  --text-dim: #a89fbd;
+  --a-color: #ff8a5c;
+  --a-color-2: #ffd166;
+  --b-color: #5ce1ff;
+  --b-color-2: #a78bfa;
+  --radius: 18px;
+  font-size: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: radial-gradient(120% 140% at 50% -10%, #1c1730 0%, var(--bg) 55%);
+  color: var(--text);
+  font-family: "Helvetica Neue", Arial, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+video { display: none; }
+#hiddenSample { display: none; }
+
+.site-header {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 56px 24px 24px;
+  text-align: center;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+
+.site-header h1 {
+  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  margin: 0 0 16px;
+  background: linear-gradient(90deg, var(--a-color), var(--a-color-2) 35%, var(--b-color) 65%, var(--b-color-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+.lede {
+  color: var(--text-dim);
+  max-width: 620px;
+  margin: 0 auto 20px;
+  font-size: 1.02rem;
+}
+
+.prompt-question {
+  font-style: italic;
+  font-size: 1.05rem;
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--text);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 24px 28px;
+}
+
+#startBtn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: linear-gradient(90deg, var(--a-color), var(--b-color));
+  color: #0c0a13;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 12px 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+#startBtn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+#startBtn:disabled { opacity: 0.55; cursor: default; transform: none; filter: none; }
+
+.status {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  min-height: 1.2em;
+  margin: 0;
+  text-align: center;
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px 80px;
+}
+
+.stage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 64px;
+}
+
+@media (max-width: 860px) {
+  .stage { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel-head h2 {
+  margin: 6px 0 4px;
+  font-size: 1.3rem;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.tag-a { color: var(--a-color); border-color: color-mix(in srgb, var(--a-color) 40%, var(--border)); }
+.tag-b { color: var(--b-color); border-color: color-mix(in srgb, var(--b-color) 40%, var(--border)); }
+
+.question {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+}
+
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #050409;
+  border: 1px solid var(--border);
+}
+
+.canvas-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: scaleX(-1); /* vista de espejo, más natural frente a la cámara */
+}
+
+.idle-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.caption {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.caption span { color: var(--text); font-weight: 600; }
+
+.reflection-section {
+  border-top: 1px solid var(--border);
+  padding-top: 40px;
+  margin-bottom: 40px;
+}
+
+.reflection-section h2 {
+  font-size: 1.4rem;
+  margin: 0 0 10px;
+}
+
+.reflection-section p {
+  max-width: 760px;
+  color: var(--text);
+  font-size: 1.02rem;
+}
+
+.site-footer {
+  text-align: center;
+  padding: 30px 24px 60px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.site-footer a { color: var(--b-color); }
+.credit { margin-top: 6px; }

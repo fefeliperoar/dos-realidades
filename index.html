@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dos realidades — Visión artificial</title>
+<meta name="description" content="Una misma cámara, dos sistemas de visión artificial construyendo representaciones distintas de la misma escena.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <p class="eyebrow">Ejercicio 02 — DPPI 2026</p>
+  <h1>Dos realidades</h1>
+  <p class="lede">Una misma cámara observa la escena. Dos sistemas de visión artificial la interpretan de maneras distintas, en tiempo real.</p>
+  <p class="prompt-question">"Si dos sistemas observan el mismo fenómeno, ¿por qué pueden construir representaciones diferentes de él?"</p>
+</header>
+
+<main>
+
+  <section class="controls">
+    <button id="startBtn" type="button">Activar cámara</button>
+    <p id="statusMsg" class="status" role="status" aria-live="polite">La cámara aún no está activa.</p>
+  </section>
+
+  <section class="stage" id="stage">
+    <article class="panel" id="panelA">
+      <div class="panel-head">
+        <span class="tag tag-a">Sistema A — Visión corporal</span>
+        <h2>Configuración del cuerpo</h2>
+        <p class="question">¿Dónde está y cómo está configurado el cuerpo?</p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="canvasA" width="640" height="480"></canvas>
+        <p class="idle-hint" id="idleHintA">esperando cuerpo…</p>
+      </div>
+      <p class="caption">MediaPipe Pose → landmarks y articulaciones · <span id="statA">sin datos</span></p>
+    </article>
+
+    <article class="panel" id="panelB">
+      <div class="panel-head">
+        <span class="tag tag-b">Sistema B — Visión de la imagen</span>
+        <h2>Campo de movimiento</h2>
+        <p class="question">¿Dónde está ocurriendo movimiento en la escena?</p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="canvasB" width="640" height="480"></canvas>
+      </div>
+      <p class="caption">Diferencia entre frames → variación de luminancia por celda · <span id="statB">sin datos</span></p>
+    </article>
+  </section>
+
+  <section class="reflection-section">
+    <h2>Reflexión</h2>
+    <p>
+      El Sistema A hace visible la dimensión estructural del cuerpo: su topología, sus articulaciones y su
+      configuración espacial en un instante dado. Sabe dónde están las manos, la cadera o la cabeza, pero no
+      percibe si el fondo se mueve, si cambia la luz o si hay algo en la escena que no sea un cuerpo reconocible
+      para el modelo. El Sistema B, en cambio, hace visible la dimensión temporal del cambio: revela dónde ocurre
+      variación entre un frame y otro, sin distinguir si esa variación proviene de un cuerpo, una sombra o un
+      objeto cualquiera. No sabe <em>qué</em> se mueve, solo que algo se mueve. Ninguno de los dos ve "la escena
+      completa": uno reduce la realidad a una anatomía reconocible, el otro a un campo de diferencias de píxeles.
+      Juntos evidencian que toda visión artificial recorta el mundo según aquello que fue diseñada para detectar.
+    </p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Código fuente: <a id="repoLink" href="#" target="_blank" rel="noopener">repositorio en GitHub</a></p>
+  <p class="credit">Felipe · Ejercicio 02 — Dos realidades · DPPI 2026</p>
+</footer>
+
+<video id="video" playsinline autoplay muted></video>
+<canvas id="hiddenSample" width="48" height="36"></canvas>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
