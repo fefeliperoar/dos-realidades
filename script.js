@@ -84,10 +84,6 @@ const statusMsg = document.getElementById("statusMsg");
 const idleHintA = document.getElementById("idleHintA");
 const statA = document.getElementById("statA");
 const statB = document.getElementById("statB");
-const repoLink = document.getElementById("repoLink");
-
-// Si el repo se renombra, basta con editar este valor.
-repoLink.href = "https://github.com/";
 
 // ---------------------------------------------------------------------------
 // Estado
