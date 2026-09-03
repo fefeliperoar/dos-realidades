@@ -10,57 +10,65 @@
 <body>
 
 <header class="site-header">
-  <p class="eyebrow">Ejercicio 02 — DPPI 2026</p>
-  <h1>Dos realidades</h1>
+  <p class="eyebrow">EJERCICIO_02</p>
+  <h1>Dos realidades, todas las realidades</h1>
   <p class="lede">Una misma cámara observa la escena. Dos sistemas de visión artificial la interpretan de maneras distintas, en tiempo real.</p>
-  <p class="prompt-question">"Si dos sistemas observan el mismo fenómeno, ¿por qué pueden construir representaciones diferentes de él?"</p>
 </header>
 
 <main>
 
   <section class="controls">
-    <button id="startBtn" type="button">Activar cámara</button>
+    <div class="btn-wrapper" id="cameraBtnWrapper">
+      <button class="btn" id="startBtn" type="button">
+        <span class="btn-txt">Cámara</span>
+        <div class="dot pulse" id="cameraDot"></div>
+      </button>
+    </div>
     <p id="statusMsg" class="status" role="status" aria-live="polite">La cámara aún no está activa.</p>
   </section>
 
   <section class="stage" id="stage">
     <article class="panel" id="panelA">
       <div class="panel-head">
-        <span class="tag tag-a">Sistema A — Visión corporal</span>
-        <h2>Configuración del cuerpo</h2>
-        <p class="question">¿Dónde está y cómo está configurado el cuerpo?</p>
+        <h2>Sistema A — Visión Corporal</h2>
       </div>
       <div class="canvas-wrap">
         <canvas id="canvasA" width="640" height="480"></canvas>
         <p class="idle-hint" id="idleHintA">esperando cuerpo…</p>
       </div>
-      <p class="caption">MediaPipe Pose → landmarks y articulaciones · <span id="statA">sin datos</span></p>
+      <p class="caption">MediaPipe · <span id="statA">sin datos</span></p>
     </article>
 
     <article class="panel" id="panelB">
       <div class="panel-head">
-        <span class="tag tag-b">Sistema B — Visión de la imagen</span>
-        <h2>Campo de movimiento</h2>
-        <p class="question">¿Dónde está ocurriendo movimiento en la escena?</p>
+        <h2>Sistema B — Movimiento</h2>
       </div>
       <div class="canvas-wrap">
         <canvas id="canvasB" width="640" height="480"></canvas>
       </div>
-      <p class="caption">Diferencia entre frames → variación de luminancia por celda · <span id="statB">sin datos</span></p>
+      <p class="caption">Diferencia de frames · <span id="statB">sin datos</span></p>
     </article>
   </section>
 
   <section class="reflection-section">
     <h2>Reflexión</h2>
     <p>
-      El Sistema A hace visible la dimensión estructural del cuerpo: su topología, sus articulaciones y su
-      configuración espacial en un instante dado. Sabe dónde están las manos, la cadera o la cabeza, pero no
-      percibe si el fondo se mueve, si cambia la luz o si hay algo en la escena que no sea un cuerpo reconocible
-      para el modelo. El Sistema B, en cambio, hace visible la dimensión temporal del cambio: revela dónde ocurre
-      variación entre un frame y otro, sin distinguir si esa variación proviene de un cuerpo, una sombra o un
-      objeto cualquiera. No sabe <em>qué</em> se mueve, solo que algo se mueve. Ninguno de los dos ve "la escena
-      completa": uno reduce la realidad a una anatomía reconocible, el otro a un campo de diferencias de píxeles.
-      Juntos evidencian que toda visión artificial recorta el mundo según aquello que fue diseñada para detectar.
+      Frente a la cámara ocurre una sola escena, pero cada sistema encuentra algo distinto en ella. Uno reconoce
+      un cuerpo a través de puntos y relaciones; el otro simplemente observa dónde algo cambia. Ninguno está
+      equivocado, pero ninguno puede verlo todo.
+    </p>
+    <p>
+      Merleau-Ponty planteaba que nuestra percepción está ligada a las posibilidades y límites de nuestro cuerpo.
+      Con las máquinas ocurre algo parecido: aquello que pueden percibir depende de cómo fueron construidas y de
+      qué les enseñamos a buscar.
+    </p>
+    <p>
+      Kosuth, por otro lado, nos permite recordar que una representación nunca es aquello que representa. Los
+      puntos, las líneas y las huellas de movimiento hablan de una persona, pero no son esa persona.
+    </p>
+    <p>
+      Tal vez lo interesante de construir una máquina que observa no sea preguntarnos cuánto puede ver, sino
+      comenzar a reconocer todo aquello que, inevitablemente, deja fuera.
     </p>
   </section>
 
@@ -68,7 +76,7 @@
 
 <footer class="site-footer">
   <p>Código fuente: <a id="repoLink" href="https://github.com/fefeliperoar/dos-realidades" target="_blank" rel="noopener">repositorio en GitHub</a></p>
-  <p class="credit">Felipe · Ejercicio 02 — Dos realidades · DPPI 2026</p>
+  <p class="credit">Felipe Roa R. - Ejercicio 02 - DPPI 2026 - Escuela de Diseño UDP</p>
 </footer>
 
 <video id="video" playsinline autoplay muted></video>

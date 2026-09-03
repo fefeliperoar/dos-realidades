@@ -8,7 +8,7 @@
   --a-color-2: #ffd166;
   --b-color: #5ce1ff;
   --b-color-2: #a78bfa;
-  --radius: 18px;
+  --radius: 20px;
   font-size: 16px;
 }
 
@@ -17,7 +17,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background: radial-gradient(120% 140% at 50% -10%, #1c1730 0%, var(--bg) 55%);
+  background: var(--bg);
   color: var(--text);
   font-family: "Helvetica Neue", Arial, "Segoe UI", sans-serif;
   line-height: 1.5;
@@ -29,7 +29,7 @@ video { display: none; }
 .site-header {
   max-width: 860px;
   margin: 0 auto;
-  padding: 56px 24px 24px;
+  padding: 64px 24px 24px;
   text-align: center;
 }
 
@@ -38,64 +38,171 @@ video { display: none; }
   letter-spacing: 0.14em;
   font-size: 0.75rem;
   color: var(--text-dim);
-  margin: 0 0 12px;
+  margin: 0 0 14px;
 }
 
 .site-header h1 {
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
-  margin: 0 0 16px;
-  background: linear-gradient(90deg, var(--a-color), var(--a-color-2) 35%, var(--b-color) 65%, var(--b-color-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 700;
+  font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+  margin: 0 0 18px;
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: -0.01em;
 }
 
 .lede {
   color: var(--text-dim);
-  max-width: 620px;
-  margin: 0 auto 20px;
-  font-size: 1.02rem;
-}
-
-.prompt-question {
   font-style: italic;
-  font-size: 1.05rem;
-  max-width: 640px;
+  max-width: 560px;
   margin: 0 auto;
-  color: var(--text);
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  padding: 14px 0;
+  font-size: 1rem;
 }
 
 .controls {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 8px 24px 28px;
+  gap: 12px;
+  padding: 36px 24px 40px;
 }
 
-#startBtn {
-  appearance: none;
-  border: 1px solid var(--border);
-  background: linear-gradient(90deg, var(--a-color), var(--b-color));
-  color: #0c0a13;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 12px 28px;
-  border-radius: 999px;
+/* Botón "Cámara" — adaptado de https://uiverse.io/dexter-st/little-emu-23 */
+.btn-wrapper {
+  --width: 152px;
+  --height: 56px;
+  --padding: 6px;
+  --border-radius: 28px;
+  --dot-size: 11px;
+  --btn-color: #17141f;
+  --hue: 18deg;
+  --animation-duration: 1.2s;
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--width);
+  height: var(--height);
+  border-radius: var(--border-radius);
+  border: none;
+
+  background-color: #00000008;
+
+  box-shadow:
+    1px 1px 2px 0 #ffffff22,
+    2px 2px 2px #0004 inset,
+    2px 2px 4px #0004 inset,
+    2px 2px 8px #0004 inset;
+
+  transition: box-shadow 50ms linear;
+  perspective: 150px;
+  perspective-origin: center;
+  user-select: none;
+  z-index: 1;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+
+  width: calc(100% - 2 * var(--padding));
+  height: calc(100% - 2 * var(--padding));
+  border-radius: calc(var(--border-radius) - var(--padding));
+  border: none;
   cursor: pointer;
-  transition: transform 0.15s ease, filter 0.15s ease;
+
+  background: linear-gradient(#ffffff14, #00000026), var(--btn-color);
+
+  box-shadow:
+    1px 1px 2px -1px #ffffff30 inset,
+    0 2px 1px #00000020,
+    0 4px 2px #00000020,
+    0 8px 4px #00000020;
+
+  transition:
+    transform 0.25s cubic-bezier(0.25, 1.5, 0.5, 2.2),
+    box-shadow 0.25s cubic-bezier(0.25, 1.5, 0.5, 1),
+    filter 0.3s cubic-bezier(0.25, 1.5, 0.5, 1);
+  will-change: transform, filter;
+  z-index: 2;
 }
 
-#startBtn:hover { filter: brightness(1.08); transform: translateY(-1px); }
-#startBtn:disabled { opacity: 0.55; cursor: default; transform: none; filter: none; }
+.btn-txt {
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.dot {
+  position: relative;
+  flex: none;
+  width: var(--dot-size);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background-color: hsla(var(--hue), 0%, 50%, 0.15);
+  border: 1px solid hsla(var(--hue), 0%, 60%, 0.6);
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+.dot::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  box-shadow:
+    0 0 10px 2px hsla(var(--hue), 80%, 55%, 0.35),
+    0 0 22px 8px hsla(var(--hue), 80%, 55%, 0.35);
+  opacity: 0;
+}
+
+@keyframes dot-pulse-bg {
+  0%, 100% { background-color: hsla(var(--hue), 50%, 50%, 0); }
+  50% { background-color: hsla(var(--hue), 100%, 55%, 1); }
+}
+
+@keyframes dot-pulse-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.btn:hover .dot {
+  background-color: hsla(var(--hue), 100%, 55%, 1);
+  border-color: hsla(var(--hue), 100%, 60%, 0.9);
+}
+
+.btn:hover { transform: translate3d(0, 0, 2px); }
+
+.btn:focus-visible {
+  outline: 2px dashed hsla(var(--hue), 70%, 50%, 0.8);
+  outline-offset: 3px;
+}
+
+.btn:active {
+  transform: translate3d(0, 0, -3px);
+}
+
+/* Estado "en vivo": la cámara ya está corriendo */
+.btn-wrapper.is-live .dot {
+  background-color: hsla(var(--hue), 100%, 55%, 1);
+  border-color: hsla(var(--hue), 100%, 60%, 0.9);
+  animation: dot-pulse-bg var(--animation-duration) ease-in-out infinite;
+}
+
+.btn-wrapper.is-live .dot::after {
+  animation: dot-pulse-glow var(--animation-duration) ease-in-out infinite;
+}
+
+.btn:disabled {
+  cursor: default;
+}
 
 .status {
   color: var(--text-dim);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   min-height: 1.2em;
   margin: 0;
   text-align: center;
@@ -129,34 +236,17 @@ main {
 }
 
 .panel-head h2 {
-  margin: 6px 0 4px;
-  font-size: 1.3rem;
-}
-
-.tag {
-  display: inline-block;
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-}
-
-.tag-a { color: var(--a-color); border-color: color-mix(in srgb, var(--a-color) 40%, var(--border)); }
-.tag-b { color: var(--b-color); border-color: color-mix(in srgb, var(--b-color) 40%, var(--border)); }
-
-.question {
   margin: 0;
-  color: var(--text-dim);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .canvas-wrap {
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   background: #050409;
   border: 1px solid var(--border);
@@ -185,7 +275,7 @@ main {
 
 .caption {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
 }
 
@@ -199,13 +289,20 @@ main {
 
 .reflection-section h2 {
   font-size: 1.4rem;
-  margin: 0 0 10px;
+  margin: 0 0 18px;
+  text-align: center;
 }
 
 .reflection-section p {
   max-width: 760px;
+  margin: 0 auto 18px;
   color: var(--text);
   font-size: 1.02rem;
+  text-align: justify;
+}
+
+.reflection-section p:last-child {
+  margin-bottom: 0;
 }
 
 .site-footer {

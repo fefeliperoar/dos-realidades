@@ -80,6 +80,7 @@ const hiddenSample = document.getElementById("hiddenSample");
 const ctxHidden = hiddenSample.getContext("2d", { willReadFrequently: true });
 
 const startBtn = document.getElementById("startBtn");
+const cameraBtnWrapper = document.getElementById("cameraBtnWrapper");
 const statusMsg = document.getElementById("statusMsg");
 const idleHintA = document.getElementById("idleHintA");
 const statA = document.getElementById("statA");
@@ -122,7 +123,7 @@ async function start() {
   // así que arrancamos el loop apenas hay cámara: si el Sistema A demora o
   // falla al cargar, B sigue funcionando igual.
   running = true;
-  startBtn.textContent = "Cámara activa";
+  cameraBtnWrapper.classList.add("is-live");
   requestAnimationFrame(renderLoop);
 
   setStatus("Cámara activa. Cargando el modelo de pose para el Sistema A…");

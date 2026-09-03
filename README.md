@@ -7,12 +7,11 @@ Ejercicio 02 del curso (DPPI 2026), sobre visión artificial y representación. 
 
 ## De qué se trata
 
-Hay dos sistemas corriendo al mismo tiempo, con la misma cámara:
+Hay dos sistemas corriendo al mismo tiempo, con la misma cámara. Ninguno de los dos muestra la imagen de la cámara tal cual — cada uno se queda solo con el dato que le importa y lo dibuja a su manera. Por eso terminan pareciendo dos cosas distintas aunque estén mirando lo mismo.
 
-- **Sistema A** usa MediaPipe Pose para detectar el cuerpo y dibuja los puntos y conexiones como una especie de constelación que se mueve con la persona.
-- **Sistema B** no reconoce nada en particular: compara cada frame con el anterior y muestra en qué zonas de la imagen hubo cambios de luz, como partículas que aparecen donde hay movimiento.
+**Sistema A — Visión Corporal.** Usa MediaPipe para encontrar los puntos del cuerpo de la persona (hombros, codos, caderas, rodillas, etc.) en cada frame. En vez de mostrar esos puntos tal cual, se dibujan conectados por líneas curvas que se mueven levemente solas, como si fueran un tejido vivo en lugar de un esqueleto rígido. Cada zona del cuerpo (cabeza, torso, brazos, piernas) tiene su propio color, y los puntos se ven más grandes o más chicos según qué tan segura está la detección y qué tan cerca está esa parte del cuerpo de la cámara. Si no hay nadie en cuadro, en el centro aparecen unos anillos suaves pulsando, como si el sistema estuviera "buscando" un cuerpo.
 
-Ninguno de los dos muestra la cámara tal cual — cada uno se queda solo con el dato que le importa y lo dibuja a su manera. Por eso terminan pareciendo dos cosas distintas aunque estén mirando lo mismo.
+**Sistema B — Movimiento.** Este no reconoce cuerpos ni nada en particular: solo compara cada frame con el anterior y se fija dónde cambió el brillo de la imagen. Donde detecta un cambio, nacen partículas — mientras más brusco fue el cambio, más partículas aparecen, más rápido se mueven y más grandes son. El color también cuenta algo: los cambios suaves se ven en tonos azules/violetas y los cambios bruscos en tonos naranjos. Las partículas se van apagando solas con el tiempo y dejan una especie de estela, en vez de desaparecer de golpe.
 
 ## Cómo probarlo
 
@@ -22,11 +21,17 @@ El `index.html` no se puede abrir directo con doble clic porque el script usa m�
 python3 -m http.server 8000
 ```
 
-y entrar a `http://localhost:8000`. Va a pedir permiso de cámara — hay que aceptarlo y apretar "Activar cámara".
+y entrar a `http://localhost:8000`. Va a pedir permiso de cámara — hay que aceptarlo y apretar el botón "Cámara".
 
 ## Reflexión
 
-El Sistema A hace visible la dimensión estructural del cuerpo: su topología, sus articulaciones y su configuración espacial en un instante dado. Sabe dónde están las manos, la cadera o la cabeza, pero no percibe si el fondo se mueve, si cambia la luz o si hay algo en la escena que no sea un cuerpo reconocible para el modelo. El Sistema B, en cambio, hace visible la dimensión temporal del cambio: revela dónde ocurre variación entre un frame y otro, sin distinguir si esa variación proviene de un cuerpo, una sombra o un objeto cualquiera. No sabe *qué* se mueve, solo que algo se mueve. Ninguno de los dos ve "la escena completa": uno reduce la realidad a una anatomía reconocible, el otro a un campo de diferencias de píxeles. Juntos evidencian que toda visión artificial recorta el mundo según aquello que fue diseñada para detectar.
+Frente a la cámara ocurre una sola escena, pero cada sistema encuentra algo distinto en ella. Uno reconoce un cuerpo a través de puntos y relaciones; el otro simplemente observa dónde algo cambia. Ninguno está equivocado, pero ninguno puede verlo todo.
+
+Merleau-Ponty planteaba que nuestra percepción está ligada a las posibilidades y límites de nuestro cuerpo. Con las máquinas ocurre algo parecido: aquello que pueden percibir depende de cómo fueron construidas y de qué les enseñamos a buscar.
+
+Kosuth, por otro lado, nos permite recordar que una representación nunca es aquello que representa. Los puntos, las líneas y las huellas de movimiento hablan de una persona, pero no son esa persona.
+
+Tal vez lo interesante de construir una máquina que observa no sea preguntarnos cuánto puede ver, sino comenzar a reconocer todo aquello que, inevitablemente, deja fuera.
 
 ## Tecnologías
 
