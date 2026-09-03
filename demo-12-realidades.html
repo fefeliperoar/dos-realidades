@@ -1,0 +1,1840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Demo — 12 combinatorias de realidades</title>
+<style>
+  :root {
+    --bg: #0c0a13;
+    --bg-panel: #14111f;
+    --border: #2a2438;
+    --text: #f1ecf7;
+    --text-dim: #a89fbd;
+    --a-color: #ff8a5c;
+    --b-color: #5ce1ff;
+    --radius: 20px;
+    font-size: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Helvetica Neue", Arial, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  video { display: none; }
+  .hidden-canvas { display: none; }
+
+  .site-header {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 24px 20px;
+    text-align: center;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    margin: 0 0 14px;
+    font-weight: 800;
+  }
+  .lede {
+    color: var(--text-dim);
+    font-style: italic;
+    max-width: 620px;
+    margin: 0 auto;
+    font-size: 0.95rem;
+  }
+
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 28px 24px 8px;
+  }
+
+  .btn-wrapper {
+    --width: 152px; --height: 56px; --padding: 6px; --border-radius: 28px;
+    --dot-size: 11px; --btn-color: #17141f; --hue: 18deg; --animation-duration: 1.2s;
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: var(--width); height: var(--height); border-radius: var(--border-radius); border: none;
+    background-color: #00000008;
+    box-shadow: 1px 1px 2px 0 #ffffff22, 2px 2px 2px #0004 inset, 2px 2px 4px #0004 inset, 2px 2px 8px #0004 inset;
+    transition: box-shadow 50ms linear; perspective: 150px; perspective-origin: center; user-select: none; z-index: 1;
+  }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.5em;
+    width: calc(100% - 2 * var(--padding)); height: calc(100% - 2 * var(--padding));
+    border-radius: calc(var(--border-radius) - var(--padding)); border: none; cursor: pointer;
+    background: linear-gradient(#ffffff14, #00000026), var(--btn-color);
+    box-shadow: 1px 1px 2px -1px #ffffff30 inset, 0 2px 1px #00000020, 0 4px 2px #00000020, 0 8px 4px #00000020;
+    transition: transform 0.25s cubic-bezier(0.25,1.5,0.5,2.2), box-shadow 0.25s cubic-bezier(0.25,1.5,0.5,1), filter 0.3s cubic-bezier(0.25,1.5,0.5,1);
+    z-index: 2;
+  }
+  .btn-txt { font-size: 0.92rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text); }
+  .dot {
+    position: relative; flex: none; width: var(--dot-size); aspect-ratio: 1/1; border-radius: 50%;
+    background-color: hsla(var(--hue), 0%, 50%, 0.15); border: 1px solid hsla(var(--hue), 0%, 60%, 0.6); box-sizing: border-box;
+  }
+  .dot::after {
+    content: ""; position: absolute; inset: -5px; border-radius: 50%;
+    box-shadow: 0 0 10px 2px hsla(var(--hue), 80%, 55%, 0.35), 0 0 22px 8px hsla(var(--hue), 80%, 55%, 0.35); opacity: 0;
+  }
+  @keyframes dot-pulse-bg { 0%,100% { background-color: hsla(var(--hue),50%,50%,0); } 50% { background-color: hsla(var(--hue),100%,55%,1); } }
+  @keyframes dot-pulse-glow { 0%,100% { opacity: 0; } 50% { opacity: 1; } }
+  .btn-wrapper.is-live .dot { background-color: hsla(var(--hue),100%,55%,1); border-color: hsla(var(--hue),100%,60%,0.9); animation: dot-pulse-bg var(--animation-duration) ease-in-out infinite; }
+  .btn-wrapper.is-live .dot::after { animation: dot-pulse-glow var(--animation-duration) ease-in-out infinite; }
+  .btn:disabled { cursor: default; }
+
+  .status { color: var(--text-dim); font-size: 0.85rem; min-height: 1.2em; margin: 0; text-align: center; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 0 24px 80px; }
+
+  .pairs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+    margin: 28px 0 36px;
+  }
+  .pair-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    font-family: inherit;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .pair-card:hover { transform: translateY(-1px); border-color: var(--text-dim); }
+  .pair-card.active { border-color: var(--a-color); box-shadow: 0 0 0 1px var(--a-color); }
+  .pair-card .num { font-size: 0.68rem; color: var(--text-dim); letter-spacing: 0.06em; }
+  .pair-card .name { font-size: 0.88rem; font-weight: 600; margin: 3px 0 5px; }
+  .pair-card .ab { font-size: 0.72rem; color: var(--text-dim); line-height: 1.4; }
+
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; }
+  @media (max-width: 860px) { .stage { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .panel-head h2 { margin: 0; font-size: 1.02rem; font-weight: 600; }
+  .panel-head .question { margin: 4px 0 0; font-size: 0.82rem; color: var(--text-dim); }
+
+  .canvas-wrap { position: relative; width: 100%; aspect-ratio: 4/3; border-radius: 16px; overflow: hidden; background: #050409; border: 1px solid var(--border); }
+  .canvas-wrap canvas { width: 100%; height: 100%; display: block; transform: scaleX(-1); }
+  .idle-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; color: var(--text-dim); font-size: 0.8rem; pointer-events: none; }
+
+  .caption { margin: 0; font-size: 0.78rem; color: var(--text-dim); }
+  .caption span { color: var(--text); font-weight: 600; }
+
+  .note {
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    max-width: 760px;
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <p class="eyebrow">DEMO — NO PUBLICADA</p>
+  <h1>12 combinatorias de realidades</h1>
+  <p class="lede">La misma cámara, la misma lógica del ejercicio (MediaPipe vs. procesamiento de imagen), probada en 12 configuraciones distintas.</p>
+</header>
+
+<main>
+
+  <section class="controls">
+    <div class="btn-wrapper" id="cameraBtnWrapper">
+      <button class="btn" id="startBtn" type="button">
+        <span class="btn-txt">Cámara</span>
+        <div class="dot pulse" id="cameraDot"></div>
+      </button>
+    </div>
+    <p id="statusMsg" class="status" role="status" aria-live="polite">La cámara aún no está activa.</p>
+  </section>
+
+  <div class="pairs-grid" id="pairsGrid"></div>
+
+  <section class="stage" id="stage">
+    <article class="panel" id="panelA">
+      <div class="panel-head">
+        <h2 id="titleA">Sistema A</h2>
+        <p class="question" id="questionA"></p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="canvasA" width="640" height="480"></canvas>
+        <p class="idle-hint" id="idleHintA"></p>
+      </div>
+      <p class="caption" id="captionA"></p>
+    </article>
+
+    <article class="panel" id="panelB">
+      <div class="panel-head">
+        <h2 id="titleB">Sistema B</h2>
+        <p class="question" id="questionB"></p>
+      </div>
+      <div class="canvas-wrap">
+        <canvas id="canvasB" width="640" height="480"></canvas>
+      </div>
+      <p class="caption" id="captionB"></p>
+    </article>
+  </section>
+
+  <p class="note">
+    Archivo de exploración, no forma parte de la entrega publicada. Cada par carga su modelo de MediaPipe (y OpenCV.js
+    cuando corresponde) recién al seleccionarlo, así que el primer click en un par nuevo puede demorar unos segundos.
+  </p>
+
+</main>
+
+<video id="video" playsinline autoplay muted></video>
+<canvas id="hiddenSample" class="hidden-canvas" width="64" height="48"></canvas>
+<canvas id="hiddenCv" class="hidden-canvas" width="160" height="120"></canvas>
+
+<script type="module">
+// ============================================================================
+// Demo — 12 combinatorias de "dos realidades" (v2, con feedback aplicado)
+// Archivo único de exploración: no se publica, solo se abre en local.
+// ============================================================================
+
+const VISION_WASM = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
+const VISION_BUNDLE_URL = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+const OPENCV_URL = "https://cdn.jsdelivr.net/npm/@techstark/opencv-js@5.0.0-release.1/dist/opencv.js";
+
+const MODELS = {
+  pose: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+  hands: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+  face: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+};
+
+// ---------------------------------------------------------------------------
+// Los 12 pares (versión revisada: cada System A muestra algo distinto,
+// cada System B usa una técnica visual distinta — sin grillas de puntos repetidas)
+// ---------------------------------------------------------------------------
+
+const PAIRS = [
+  { id: 1, name: "Cuerpo completo / Movimiento",
+    a: { kind: "poseFull", tool: "MediaPipe Pose Landmarker", label: "Cuerpo completo", question: "¿cómo está configurado el cuerpo?" },
+    b: { kind: "motionParticles", tool: "Canvas 2D", label: "Movimiento", question: "¿dónde hay movimiento?" } },
+  { id: 2, name: "Postura / Dirección del movimiento",
+    a: { kind: "postureLines", tool: "MediaPipe Pose Landmarker", label: "Postura (solo conectores)", question: "¿qué forma dibuja el cuerpo?" },
+    b: { kind: "opticalFlow", tool: "Canvas 2D", label: "Dirección del movimiento", question: "¿hacia dónde se mueven las cosas?" } },
+  { id: 3, name: "Ángulos articulares / Líneas",
+    a: { kind: "jointAngles", tool: "MediaPipe Pose Landmarker", label: "Ángulos articulares", question: "¿qué ángulo forman las articulaciones?" },
+    b: { kind: "houghLines", tool: "OpenCV.js (HoughLinesP)", label: "Líneas", question: "¿qué líneas rectas hay en la escena?" } },
+  { id: 4, name: "Inclinación del cuerpo / Threshold",
+    a: { kind: "bodyTilt", tool: "MediaPipe Pose Landmarker", label: "Inclinación del cuerpo", question: "¿cuánto se inclina el cuerpo?" },
+    b: { kind: "threshold", tool: "OpenCV.js (adaptiveThreshold)", label: "Binarización", question: "¿qué es claro y qué es oscuro, sin grises?" } },
+  { id: 5, name: "Manos / Bordes",
+    a: { kind: "handFull", tool: "MediaPipe Hand Landmarker", label: "Posición de la mano", question: "¿qué forma tiene la mano?" },
+    b: { kind: "cannyEdges", tool: "OpenCV.js (Canny)", label: "Bordes", question: "¿dónde hay cambios bruscos de intensidad?" } },
+  { id: 6, name: "Apertura de mano / Cantidad de movimiento",
+    a: { kind: "handOpenness", tool: "MediaPipe Hand Landmarker", label: "Apertura de la mano", question: "¿qué tan abierta está la mano?" },
+    b: { kind: "motionDial", tool: "Canvas 2D", label: "Cantidad de movimiento", question: "¿cuánto está cambiando la escena?" } },
+  { id: 7, name: "Distancia entre dedos / Contornos",
+    a: { kind: "fingerDistance", tool: "MediaPipe Hand Landmarker", label: "Distancia entre dedos", question: "¿qué tan cerca están el pulgar y el índice?" },
+    b: { kind: "contours", tool: "OpenCV.js (findContours)", label: "Contornos", question: "¿qué formas cerradas hay?" } },
+  { id: 8, name: "Orientación de mano / Sustracción de fondo",
+    a: { kind: "handOrientation", tool: "MediaPipe Hand Landmarker", label: "Orientación de la mano", question: "¿hacia dónde apunta la palma?" },
+    b: { kind: "bgSubtraction", tool: "OpenCV.js (BackgroundSubtractorMOG2)", label: "Sustracción de fondo", question: "¿qué es nuevo respecto al fondo?" } },
+  { id: 9, name: "Trayectoria / Histograma",
+    a: { kind: "handTrail", tool: "MediaPipe Hand Landmarker", label: "Trayectoria de la mano", question: "¿por dónde ha pasado la mano?" },
+    b: { kind: "histogram", tool: "Canvas 2D", label: "Histograma RGB", question: "¿cómo se distribuye el color de la escena?" } },
+  { id: 10, name: "Orientación del rostro / Rango de color",
+    a: { kind: "faceOrientation", tool: "MediaPipe Face Landmarker", label: "Orientación del rostro", question: "¿hacia dónde mira la cara?" },
+    b: { kind: "hsvSpotlight", tool: "OpenCV.js (inRange, HSV)", label: "Rango de color", question: "¿dónde aparece un color específico?" } },
+  { id: 11, name: "Ojos y boca / Color dominante",
+    a: { kind: "eyesMouth", tool: "MediaPipe Face Landmarker", label: "Apertura de ojos y boca", question: "¿qué tan abiertos están los ojos y la boca?" },
+    b: { kind: "dominantColor", tool: "Canvas 2D", label: "Color dominante", question: "¿qué color domina la escena?" } },
+  { id: 12, name: "Expresiones / Luminosidad",
+    a: { kind: "faceExpressions", tool: "MediaPipe Face Landmarker (blendshapes)", label: "Expresiones faciales", question: "¿qué expresión tiene la cara?" },
+    b: { kind: "luminosityGrid", tool: "Canvas 2D", label: "Luminosidad", question: "¿cómo se distribuye la luz en la escena?" } },
+];
+
+// ---------------------------------------------------------------------------
+// Topologías / regiones reutilizadas
+// ---------------------------------------------------------------------------
+
+const POSE_CONNECTIONS = [
+  [11,12],[11,13],[13,15],[12,14],[14,16],
+  [11,23],[12,24],[23,24],
+  [23,25],[25,27],[24,26],[26,28],
+  [27,29],[29,31],[28,30],[30,32],
+  [27,31],[28,32],[0,11],[0,12],
+];
+const POSE_REGION = {
+  0:"head", 11:"torso",12:"torso",23:"torso",24:"torso",
+  13:"armL",15:"armL",14:"armR",16:"armR",
+  25:"legL",27:"legL",29:"legL",31:"legL",
+  26:"legR",28:"legR",30:"legR",32:"legR",
+};
+
+const HAND_CONNECTIONS = [
+  [0,1],[1,2],[2,3],[3,4],
+  [0,5],[5,6],[6,7],[7,8],
+  [5,9],[9,10],[10,11],[11,12],
+  [9,13],[13,14],[14,15],[15,16],
+  [13,17],[17,18],[18,19],[19,20],
+  [0,17],
+];
+const HAND_REGION = {
+  0:"palm",1:"thumb",2:"thumb",3:"thumb",4:"thumb",
+  5:"index",6:"index",7:"index",8:"index",
+  9:"middle",10:"middle",11:"middle",12:"middle",
+  13:"ring",14:"ring",15:"ring",16:"ring",
+  17:"pinky",18:"pinky",19:"pinky",20:"pinky",
+};
+
+const REGION_COLORS = {
+  head:"#ffd166", torso:"#ffe38a", armL:"#ff8a5c", armR:"#ff5c8a", legL:"#5ce1ff", legR:"#a78bfa",
+  palm:"#f1ecf7", thumb:"#ff8a5c", index:"#ffd166", middle:"#5ce1ff", ring:"#a78bfa", pinky:"#ff5c8a",
+};
+
+// ángulos articulares: [nombre, puntoA, vértice, puntoC]
+const ANGLE_JOINTS = [
+  ["codo izq.", 11, 13, 15],
+  ["codo der.", 12, 14, 16],
+  ["rodilla izq.", 23, 25, 27],
+  ["rodilla der.", 24, 26, 28],
+];
+
+// blendshapes a mostrar en el ecualizador de expresiones
+const EXPRESSION_BARS = [
+  { key: "browDownLeft", label: "cejas\nabajo" },
+  { key: "browOuterUpLeft", label: "cejas\narriba" },
+  { key: "eyeSquintLeft", label: "ojos\nentrecerr." },
+  { key: "eyeWideLeft", label: "ojos\nabiertos" },
+  { key: "jawOpen", label: "boca\nabierta" },
+  { key: "mouthSmileLeft", label: "sonrisa" },
+  { key: "mouthPucker", label: "boca\nfruncida" },
+  { key: "cheekPuff", label: "mejillas\ninfladas" },
+];
+
+// ---------------------------------------------------------------------------
+// DOM
+// ---------------------------------------------------------------------------
+
+const video = document.getElementById("video");
+const canvasA = document.getElementById("canvasA");
+const ctxA = canvasA.getContext("2d");
+const canvasB = document.getElementById("canvasB");
+const ctxB = canvasB.getContext("2d");
+const hiddenSample = document.getElementById("hiddenSample");
+const ctxHidden = hiddenSample.getContext("2d", { willReadFrequently: true });
+const hiddenCv = document.getElementById("hiddenCv");
+const ctxCv = hiddenCv.getContext("2d", { willReadFrequently: true });
+
+const startBtn = document.getElementById("startBtn");
+const cameraBtnWrapper = document.getElementById("cameraBtnWrapper");
+const statusMsg = document.getElementById("statusMsg");
+const idleHintA = document.getElementById("idleHintA");
+const pairsGrid = document.getElementById("pairsGrid");
+const titleA = document.getElementById("titleA");
+const titleB = document.getElementById("titleB");
+const questionA = document.getElementById("questionA");
+const questionB = document.getElementById("questionB");
+const captionA = document.getElementById("captionA");
+const captionB = document.getElementById("captionB");
+
+// ---------------------------------------------------------------------------
+// Estado
+// ---------------------------------------------------------------------------
+
+let running = false;
+let activeIndex = 0;
+let lastVideoTime = -1;
+const taskCache = {};
+let visionFileset = null;
+let cvReady = null;
+
+// buffers por técnica (se reinician al cambiar de par para no mezclar estados)
+let particles = [];
+let flowPrevBlocks = null;
+let motionEMA = 0;
+let handTrailPoints = [];
+let bgSubtractor = null;
+let bgAvgGrid = null; // respaldo si MOG2 no está disponible
+let histSmoothed = null;
+let dominantSmoothed = null;
+let prevLumaGridMotion = null;
+let prevLumaGridDial = null;
+
+const GW = 56, GH = 42; // grilla estándar para técnicas B basadas en celdas
+
+// ---------------------------------------------------------------------------
+// Selector de pares
+// ---------------------------------------------------------------------------
+
+function buildPairsGrid() {
+  pairsGrid.innerHTML = "";
+  PAIRS.forEach((pair, idx) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "pair-card" + (idx === activeIndex ? " active" : "");
+    card.innerHTML = `
+      <div class="num">PAR ${String(pair.id).padStart(2, "0")}</div>
+      <div class="name">${pair.name}</div>
+      <div class="ab">A: ${pair.a.label}<br>B: ${pair.b.label}</div>
+    `;
+    card.addEventListener("click", () => selectPair(idx));
+    pairsGrid.appendChild(card);
+  });
+}
+
+function selectPair(idx) {
+  activeIndex = idx;
+  [...pairsGrid.children].forEach((el, i) => el.classList.toggle("active", i === idx));
+  resetBuffers();
+  updateLabels();
+}
+
+function updateLabels() {
+  const pair = PAIRS[activeIndex];
+  titleA.textContent = `Sistema A — ${pair.a.label}`;
+  questionA.textContent = pair.a.question;
+  captionA.innerHTML = `${pair.a.tool} · <span id="statA">sin datos</span>`;
+  titleB.textContent = `Sistema B — ${pair.b.label}`;
+  questionB.textContent = pair.b.question;
+  captionB.innerHTML = `${pair.b.tool} · <span id="statB">sin datos</span>`;
+  idleHintA.textContent = "";
+}
+
+function resetBuffers() {
+  particles = [];
+  flowPrevBlocks = null;
+  motionEMA = 0;
+  handTrailPoints = [];
+  bgAvgGrid = null;
+  histSmoothed = null;
+  dominantSmoothed = null;
+  prevLumaGridMotion = null;
+  prevLumaGridDial = null;
+  if (bgSubtractor) { try { bgSubtractor.delete(); } catch (e) {} bgSubtractor = null; }
+  ctxA.clearRect(0, 0, canvasA.width, canvasA.height);
+  ctxB.clearRect(0, 0, canvasB.width, canvasB.height);
+}
+
+// ---------------------------------------------------------------------------
+// Arranque de cámara
+// ---------------------------------------------------------------------------
+
+startBtn.addEventListener("click", start);
+
+async function start() {
+  startBtn.disabled = true;
+  setStatus("Solicitando acceso a la cámara…");
+  try {
+    await initCamera();
+  } catch (err) {
+    console.error(err);
+    setStatus("No se pudo acceder a la cámara: " + (err && err.message ? err.message : "revisa los permisos."));
+    startBtn.disabled = false;
+    return;
+  }
+  running = true;
+  cameraBtnWrapper.classList.add("is-live");
+  setStatus("Cámara activa. Elige un par para cargarlo (el primer click de cada uno demora unos segundos).");
+  requestAnimationFrame(renderLoop);
+}
+
+function setStatus(text) { statusMsg.textContent = text; }
+
+async function initCamera() {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
+    audio: false,
+  });
+  video.srcObject = stream;
+  await video.play();
+  await new Promise((resolve) => {
+    if (video.readyState >= 2) return resolve();
+    video.onloadedmetadata = () => resolve();
+  });
+  const w = video.videoWidth || 640;
+  const h = video.videoHeight || 480;
+  canvasA.width = w; canvasA.height = h;
+  canvasB.width = w; canvasB.height = h;
+}
+
+// ---------------------------------------------------------------------------
+// Carga perezosa de MediaPipe / OpenCV
+// ---------------------------------------------------------------------------
+
+async function getVision() {
+  if (!visionFileset) {
+    const { FilesetResolver } = await import(VISION_BUNDLE_URL);
+    visionFileset = await FilesetResolver.forVisionTasks(VISION_WASM);
+  }
+  return visionFileset;
+}
+
+async function getMPModule() {
+  return import(VISION_BUNDLE_URL);
+}
+
+async function getTask(kind) {
+  if (taskCache[kind]) return taskCache[kind];
+  const vision = await getVision();
+  const mp = await getMPModule();
+  let task;
+  try {
+    task = await createTask(mp, vision, kind, "GPU");
+  } catch (err) {
+    console.warn(`Fallo GPU para ${kind}, reintentando con CPU`, err);
+    task = await createTask(mp, vision, kind, "CPU");
+  }
+  taskCache[kind] = task;
+  return task;
+}
+
+async function createTask(mp, vision, kind, delegate) {
+  const base = (path) => ({ baseOptions: { modelAssetPath: path, delegate }, runningMode: "VIDEO" });
+  switch (kind) {
+    case "pose":
+      return mp.PoseLandmarker.createFromOptions(vision, { ...base(MODELS.pose), numPoses: 1 });
+    case "hands":
+      return mp.HandLandmarker.createFromOptions(vision, { ...base(MODELS.hands), numHands: 1 });
+    case "face":
+      return mp.FaceLandmarker.createFromOptions(vision, {
+        ...base(MODELS.face),
+        numFaces: 1,
+        outputFaceBlendshapes: true,
+        outputFacialTransformationMatrixes: true,
+      });
+    default:
+      throw new Error("Tarea MediaPipe desconocida: " + kind);
+  }
+}
+
+function loadOpenCV() {
+  if (cvReady) return cvReady;
+  cvReady = new Promise((resolve, reject) => {
+    if (window.cv && window.cv.Mat) return resolve(window.cv);
+    const script = document.createElement("script");
+    script.src = OPENCV_URL;
+    script.async = true;
+    script.onload = () => {
+      const c = window.cv;
+      if (!c) return reject(new Error("cv no definido tras cargar opencv.js"));
+      if (typeof c.then === "function") {
+        c.then((ready) => { window.cv = ready; resolve(ready); });
+      } else if (c.Mat) {
+        resolve(c);
+      } else {
+        c["onRuntimeInitialized"] = () => resolve(c);
+      }
+    };
+    script.onerror = () => reject(new Error("No se pudo cargar OpenCV.js"));
+    document.head.appendChild(script);
+  });
+  return cvReady;
+}
+
+// ---------------------------------------------------------------------------
+// Loop principal
+// ---------------------------------------------------------------------------
+
+let loadingKey = null;
+const resourcesReady = {};
+
+async function renderLoop(timestampMs) {
+  if (!running) return;
+
+  if (video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const pair = PAIRS[activeIndex];
+    const key = pair.a.kind + "|" + pair.b.kind;
+
+    if (loadingKey !== key) {
+      loadingKey = key;
+      ensureResources(pair).catch((err) => console.error(err));
+    }
+
+    try {
+      await drawSystemA(pair, timestampMs);
+    } catch (err) {
+      console.error("Error en Sistema A:", err);
+    }
+    try {
+      drawSystemB(pair);
+    } catch (err) {
+      console.error("Error en Sistema B:", err);
+    }
+  }
+
+  requestAnimationFrame(renderLoop);
+}
+
+// qué tarea de MediaPipe necesita cada System A
+const A_NEEDS_TASK = {
+  poseFull: "pose", postureLines: "pose", jointAngles: "pose", bodyTilt: "pose",
+  handFull: "hands", handOpenness: "hands", fingerDistance: "hands", handOrientation: "hands", handTrail: "hands",
+  faceOrientation: "face", eyesMouth: "face", faceExpressions: "face",
+};
+
+// qué B necesita OpenCV.js
+const B_NEEDS_CV = new Set(["houghLines", "threshold", "cannyEdges", "contours", "bgSubtraction", "hsvSpotlight"]);
+
+async function ensureResources(pair) {
+  const key = pair.a.kind + "|" + pair.b.kind;
+  if (resourcesReady[key]) return;
+  const tasks = [];
+  const mpKind = A_NEEDS_TASK[pair.a.kind];
+  if (mpKind) tasks.push(getTask(mpKind));
+  if (B_NEEDS_CV.has(pair.b.kind)) tasks.push(loadOpenCV());
+  await Promise.all(tasks);
+  resourcesReady[key] = true;
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+function setStat(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
+function toDeg(rad) { return (rad * 180) / Math.PI; }
+
+// ---------------------------------------------------------------------------
+// SISTEMA A — despachador
+// ---------------------------------------------------------------------------
+
+async function drawSystemA(pair, timestampMs) {
+  const kind = pair.a.kind;
+  const w = canvasA.width, h = canvasA.height;
+
+  if (kind === "poseFull" || kind === "postureLines" || kind === "jointAngles" || kind === "bodyTilt") {
+    const task = taskCache.pose;
+    const result = task ? task.detectForVideo(video, timestampMs) : null;
+    const landmarks = result && result.landmarks && result.landmarks[0];
+    ctxA.fillStyle = "#07060c"; ctxA.fillRect(0, 0, w, h);
+    if (!landmarks) { setStat("statA", "sin cuerpo detectado"); drawIdlePulse(ctxA, w, h); return; }
+    if (kind === "poseFull") drawJointsAndConnectors(landmarks, POSE_CONNECTIONS, POSE_REGION);
+    else if (kind === "postureLines") drawConnectorsOnly(landmarks, POSE_CONNECTIONS, POSE_REGION);
+    else if (kind === "jointAngles") drawJointAngles(landmarks);
+    else if (kind === "bodyTilt") drawBodyTilt(landmarks);
+    return;
+  }
+
+  if (kind === "handFull" || kind === "handOpenness" || kind === "fingerDistance" || kind === "handOrientation" || kind === "handTrail") {
+    const task = taskCache.hands;
+    const result = task ? task.detectForVideo(video, timestampMs) : null;
+    const landmarks = result && result.landmarks && result.landmarks[0];
+    ctxA.fillStyle = "#07060c"; ctxA.fillRect(0, 0, w, h);
+    if (!landmarks) {
+      setStat("statA", "sin mano detectada");
+      if (kind === "handTrail") drawHandTrail(null); else drawIdlePulse(ctxA, w, h);
+      return;
+    }
+    if (kind === "handFull") drawJointsAndConnectors(landmarks, HAND_CONNECTIONS, HAND_REGION);
+    else if (kind === "handOpenness") drawHandOpenness(landmarks);
+    else if (kind === "fingerDistance") drawFingerDistance(landmarks);
+    else if (kind === "handOrientation") drawHandOrientation(landmarks);
+    else if (kind === "handTrail") drawHandTrail(landmarks);
+    return;
+  }
+
+  if (kind === "faceOrientation" || kind === "eyesMouth" || kind === "faceExpressions") {
+    const task = taskCache.face;
+    const result = task ? task.detectForVideo(video, timestampMs) : null;
+    const landmarks = result && result.faceLandmarks && result.faceLandmarks[0];
+    ctxA.fillStyle = "#07060c"; ctxA.fillRect(0, 0, w, h);
+    if (!landmarks) { setStat("statA", "sin rostro detectado"); drawIdlePulse(ctxA, w, h); return; }
+    if (kind === "faceOrientation") drawFaceOrientation(landmarks, result);
+    else if (kind === "eyesMouth") drawEyesMouth(landmarks);
+    else if (kind === "faceExpressions") drawFaceExpressions(result);
+    return;
+  }
+
+  ctxA.fillStyle = "#07060c"; ctxA.fillRect(0, 0, w, h);
+  drawIdlePulse(ctxA, w, h);
+}
+
+function drawIdlePulse(ctx, w, h) {
+  const t = performance.now() / 1000;
+  const cx = w / 2, cy = h / 2;
+  for (let i = 0; i < 3; i++) {
+    const phase = t * 0.9 + i * 0.7;
+    const r = 20 + ((phase * 40) % 140);
+    const alpha = clamp(1 - r / 160, 0, 0.5);
+    ctx.beginPath();
+    ctx.strokeStyle = `rgba(255, 209, 102, ${alpha})`;
+    ctx.lineWidth = 1.5;
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+// --- A1. Articulaciones + conectores (esqueleto completo) --------------------
+
+function drawJointsAndConnectors(landmarks, connections, regionMap) {
+  const w = canvasA.width, h = canvasA.height;
+  const t = performance.now() / 1000;
+  let visibleCount = 0;
+
+  connections.forEach(([ia, ib], idx) => {
+    const a = landmarks[ia], b = landmarks[ib];
+    if (!a || !b) return;
+    const vis = ((a.visibility ?? 1) + (b.visibility ?? 1)) / 2;
+    if (vis < 0.15) return;
+    const ax = a.x * w, ay = a.y * h, bx = b.x * w, by = b.y * h;
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    const dx = bx - ax, dy = by - ay;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len, ny = dx / len;
+    const wobble = Math.sin(t * 1.6 + idx) * Math.min(10, len * 0.12);
+    const cx = mx + nx * wobble, cy = my + ny * wobble;
+    const colorA = REGION_COLORS[regionMap[ia]] || "#f1ecf7";
+    const colorB = REGION_COLORS[regionMap[ib]] || "#f1ecf7";
+    const grad = ctxA.createLinearGradient(ax, ay, bx, by);
+    grad.addColorStop(0, colorA); grad.addColorStop(1, colorB);
+    ctxA.strokeStyle = grad;
+    ctxA.globalAlpha = 0.35 + vis * 0.5;
+    ctxA.lineWidth = 1.5 + vis * 3;
+    ctxA.lineCap = "round";
+    ctxA.shadowColor = colorA; ctxA.shadowBlur = 12;
+    ctxA.beginPath(); ctxA.moveTo(ax, ay); ctxA.quadraticCurveTo(cx, cy, bx, by); ctxA.stroke();
+  });
+  ctxA.globalAlpha = 1; ctxA.shadowBlur = 0;
+
+  Object.keys(regionMap).forEach((key) => {
+    const i = Number(key);
+    const p = landmarks[i];
+    if (!p) return;
+    const vis = p.visibility ?? 1;
+    if (vis < 0.1) return;
+    visibleCount++;
+    const depthScale = clamp(1 - (p.z ?? 0) * 1.6, 0.55, 1.9);
+    const r = (3 + vis * 5) * depthScale;
+    const color = REGION_COLORS[regionMap[i]] || "#f1ecf7";
+    ctxA.beginPath();
+    ctxA.fillStyle = color;
+    ctxA.globalAlpha = 0.55 + vis * 0.45;
+    ctxA.shadowColor = color; ctxA.shadowBlur = 18;
+    ctxA.arc(p.x * w, p.y * h, Math.max(1.5, r), 0, Math.PI * 2);
+    ctxA.fill();
+  });
+  ctxA.globalAlpha = 1; ctxA.shadowBlur = 0;
+  setStat("statA", `${visibleCount} puntos activos`);
+}
+
+// --- A2. Solo conectores, silueta de alambre (sin puntos) ---------------------
+
+function drawConnectorsOnly(landmarks, connections, regionMap) {
+  const w = canvasA.width, h = canvasA.height;
+  let visibleCount = 0;
+  connections.forEach(([ia, ib]) => {
+    const a = landmarks[ia], b = landmarks[ib];
+    if (!a || !b) return;
+    const vis = ((a.visibility ?? 1) + (b.visibility ?? 1)) / 2;
+    if (vis < 0.15) return;
+    visibleCount++;
+    const color = REGION_COLORS[regionMap[ia]] || "#f1ecf7";
+    ctxA.strokeStyle = color;
+    ctxA.globalAlpha = 0.4 + vis * 0.5;
+    ctxA.lineWidth = 3;
+    ctxA.lineCap = "round";
+    ctxA.lineJoin = "round";
+    ctxA.shadowColor = color; ctxA.shadowBlur = 10;
+    ctxA.beginPath();
+    ctxA.moveTo(a.x * w, a.y * h);
+    ctxA.lineTo(b.x * w, b.y * h);
+    ctxA.stroke();
+  });
+  ctxA.globalAlpha = 1; ctxA.shadowBlur = 0;
+  setStat("statA", `${visibleCount} conectores`);
+}
+
+// --- A3. Ángulos articulares (arcos + grados) ---------------------------------
+
+function angleAt(pA, pV, pC) {
+  const v1x = pA.x - pV.x, v1y = pA.y - pV.y;
+  const v2x = pC.x - pV.x, v2y = pC.y - pV.y;
+  const dot = v1x * v2x + v1y * v2y;
+  const mag1 = Math.hypot(v1x, v1y), mag2 = Math.hypot(v2x, v2y);
+  if (mag1 < 1e-6 || mag2 < 1e-6) return null;
+  const cos = clamp(dot / (mag1 * mag2), -1, 1);
+  return toDeg(Math.acos(cos));
+}
+
+function drawJointAngles(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+
+  // esqueleto tenue de fondo, como contexto
+  POSE_CONNECTIONS.forEach(([ia, ib]) => {
+    const a = landmarks[ia], b = landmarks[ib];
+    if (!a || !b) return;
+    ctxA.strokeStyle = "rgba(241, 236, 247, 0.18)";
+    ctxA.lineWidth = 1.5;
+    ctxA.beginPath();
+    ctxA.moveTo(a.x * w, a.y * h);
+    ctxA.lineTo(b.x * w, b.y * h);
+    ctxA.stroke();
+  });
+
+  let measured = 0;
+  const readings = [];
+  ANGLE_JOINTS.forEach(([name, ia, iv, ic]) => {
+    const pA = landmarks[ia], pV = landmarks[iv], pC = landmarks[ic];
+    if (!pA || !pV || !pC) return;
+    const vis = ((pA.visibility ?? 1) + (pV.visibility ?? 1) + (pC.visibility ?? 1)) / 3;
+    if (vis < 0.3) return;
+    const angle = angleAt(pA, pV, pC);
+    if (angle === null) return;
+    measured++;
+    readings.push(`${name.split(" ")[0]} ${Math.round(angle)}°`);
+
+    const vx = pV.x * w, vy = pV.y * h;
+    const ax = Math.atan2((pA.y - pV.y), (pA.x - pV.x));
+    const cx = Math.atan2((pC.y - pV.y), (pC.x - pV.x));
+    const r = 30;
+    const color = "#ffd166";
+
+    ctxA.strokeStyle = color;
+    ctxA.lineWidth = 3;
+    ctxA.shadowColor = color; ctxA.shadowBlur = 10;
+    ctxA.beginPath();
+    ctxA.arc(vx, vy, r, ax, cx, false);
+    ctxA.stroke();
+    // si el arco corto queda "al revés" (más de 180°), dibuja el complementario
+    let sweep = cx - ax;
+    while (sweep < 0) sweep += Math.PI * 2;
+    if (sweep > Math.PI) {
+      ctxA.beginPath();
+      ctxA.arc(vx, vy, r, ax, cx, true);
+      ctxA.stroke();
+    }
+    ctxA.shadowBlur = 0;
+
+    ctxA.beginPath();
+    ctxA.fillStyle = color;
+    ctxA.arc(vx, vy, 4, 0, Math.PI * 2);
+    ctxA.fill();
+
+    ctxA.font = "600 13px 'Helvetica Neue', Arial, sans-serif";
+    ctxA.fillStyle = "#f1ecf7";
+    ctxA.textAlign = "center";
+    ctxA.save();
+    ctxA.translate(vx, vy - r - 12);
+    ctxA.scale(-1, 1); // contrarresta el mirror del canvas para que el texto se lea bien
+    ctxA.fillText(`${Math.round(angle)}°`, 0, 0);
+    ctxA.restore();
+  });
+
+  setStat("statA", measured ? readings.join(" · ") : "sin articulaciones visibles");
+}
+
+// --- A4. Inclinación del cuerpo (línea + nivel) -------------------------------
+
+function drawBodyTilt(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+  const lsh = landmarks[11], rsh = landmarks[12], lhip = landmarks[23], rhip = landmarks[24];
+  if (!lsh || !rsh || !lhip || !rhip) { setStat("statA", "sin torso visible"); drawIdlePulse(ctxA, w, h); return; }
+
+  const shoulderMid = { x: (lsh.x + rsh.x) / 2, y: (lsh.y + rsh.y) / 2 };
+  const hipMid = { x: (lhip.x + rhip.x) / 2, y: (lhip.y + rhip.y) / 2 };
+
+  const dx = (hipMid.x - shoulderMid.x) * w;
+  const dy = (hipMid.y - shoulderMid.y) * h;
+  const tiltFromVertical = toDeg(Math.atan2(dx, dy)); // 0 = perfectamente vertical
+
+  const sx = shoulderMid.x * w, sy = shoulderMid.y * h;
+  const hx = hipMid.x * w, hy = hipMid.y * h;
+
+  // línea de la columna
+  ctxA.strokeStyle = "#5ce1ff";
+  ctxA.lineWidth = 4;
+  ctxA.shadowColor = "#5ce1ff"; ctxA.shadowBlur = 14;
+  ctxA.beginPath(); ctxA.moveTo(sx, sy); ctxA.lineTo(hx, hy); ctxA.stroke();
+  ctxA.shadowBlur = 0;
+
+  // línea de referencia vertical (punteada)
+  ctxA.strokeStyle = "rgba(241, 236, 247, 0.3)";
+  ctxA.lineWidth = 1.5;
+  ctxA.setLineDash([5, 6]);
+  ctxA.beginPath(); ctxA.moveTo(sx, sy); ctxA.lineTo(sx, hy); ctxA.stroke();
+  ctxA.setLineDash([]);
+
+  // indicador tipo "nivel" en la parte inferior del panel
+  const barY = h - 46, barX = w / 2 - 90, barW = 180;
+  ctxA.strokeStyle = "rgba(241, 236, 247, 0.35)";
+  ctxA.lineWidth = 2;
+  ctxA.beginPath(); ctxA.moveTo(barX, barY); ctxA.lineTo(barX + barW, barY); ctxA.stroke();
+  ctxA.beginPath(); ctxA.moveTo(barX + barW / 2, barY - 8); ctxA.lineTo(barX + barW / 2, barY + 8); ctxA.stroke();
+
+  const bubbleX = clamp(barX + barW / 2 + tiltFromVertical * 3.2, barX + 8, barX + barW - 8);
+  const level = Math.abs(tiltFromVertical) < 3;
+  const bubbleColor = level ? "#06d6a0" : "#ffd166";
+  ctxA.beginPath();
+  ctxA.fillStyle = bubbleColor;
+  ctxA.shadowColor = bubbleColor; ctxA.shadowBlur = 14;
+  ctxA.arc(bubbleX, barY, 8, 0, Math.PI * 2);
+  ctxA.fill();
+  ctxA.shadowBlur = 0;
+
+  ctxA.font = "600 13px 'Helvetica Neue', Arial, sans-serif";
+  ctxA.fillStyle = "#f1ecf7";
+  ctxA.textAlign = "center";
+  ctxA.save();
+  ctxA.translate(w / 2, barY + 24);
+  ctxA.scale(-1, 1);
+  ctxA.fillText(`${tiltFromVertical > 0 ? "+" : ""}${tiltFromVertical.toFixed(1)}°`, 0, 0);
+  ctxA.restore();
+
+  setStat("statA", level ? "nivelado" : `inclinado ${Math.abs(tiltFromVertical).toFixed(1)}°`);
+}
+
+// --- A5. Apertura de mano (medidor circular) ----------------------------------
+
+function computeHandOpenness(landmarks) {
+  const tips = [4, 8, 12, 16, 20];
+  const wrist = landmarks[0];
+  const avgDist = tips.reduce((s, i) => s + Math.hypot(landmarks[i].x - wrist.x, landmarks[i].y - wrist.y), 0) / tips.length;
+  return clamp((avgDist - 0.12) / 0.22, 0, 1);
+}
+
+function drawHandOpenness(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+  const openness = computeHandOpenness(landmarks);
+
+  // puntos mínimos de contexto: palma + yemas
+  const wrist = landmarks[0];
+  ctxA.beginPath(); ctxA.fillStyle = "#a89fbd"; ctxA.globalAlpha = 0.5;
+  ctxA.arc(wrist.x * w, wrist.y * h, 5, 0, Math.PI * 2); ctxA.fill();
+  ctxA.globalAlpha = 1;
+  [4, 8, 12, 16, 20].forEach((i) => {
+    const p = landmarks[i];
+    ctxA.beginPath();
+    ctxA.fillStyle = "#f1ecf7";
+    ctxA.globalAlpha = 0.6;
+    ctxA.arc(p.x * w, p.y * h, 4, 0, Math.PI * 2);
+    ctxA.fill();
+  });
+  ctxA.globalAlpha = 1;
+
+  // gauge radial centrado
+  const cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.28;
+  const start = Math.PI * 0.75, end = Math.PI * 2.25;
+  ctxA.lineWidth = 14;
+  ctxA.lineCap = "round";
+  ctxA.strokeStyle = "rgba(241, 236, 247, 0.15)";
+  ctxA.beginPath(); ctxA.arc(cx, cy, r, start, end); ctxA.stroke();
+
+  const color = `hsl(${30 + openness * 140}, 85%, 60%)`;
+  ctxA.strokeStyle = color;
+  ctxA.shadowColor = color; ctxA.shadowBlur = 16;
+  ctxA.beginPath(); ctxA.arc(cx, cy, r, start, start + (end - start) * openness); ctxA.stroke();
+  ctxA.shadowBlur = 0;
+
+  ctxA.font = "700 28px 'Helvetica Neue', Arial, sans-serif";
+  ctxA.fillStyle = "#f1ecf7";
+  ctxA.textAlign = "center";
+  ctxA.save();
+  ctxA.translate(cx, cy + 10);
+  ctxA.scale(-1, 1);
+  ctxA.fillText(`${Math.round(openness * 100)}%`, 0, 0);
+  ctxA.restore();
+
+  setStat("statA", `${Math.round(openness * 100)}% abierta`);
+}
+
+// --- A6. Distancia entre dedos (línea + etiqueta) -----------------------------
+
+function drawFingerDistance(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+  const thumb = landmarks[4], index = landmarks[8];
+
+  // puntos tenues del resto de la mano para dar contexto
+  HAND_CONNECTIONS.forEach(([ia, ib]) => {
+    const a = landmarks[ia], b = landmarks[ib];
+    if (!a || !b) return;
+    ctxA.strokeStyle = "rgba(241, 236, 247, 0.12)";
+    ctxA.lineWidth = 1.5;
+    ctxA.beginPath(); ctxA.moveTo(a.x * w, a.y * h); ctxA.lineTo(b.x * w, b.y * h); ctxA.stroke();
+  });
+
+  const tx = thumb.x * w, ty = thumb.y * h;
+  const ix = index.x * w, iy = index.y * h;
+  const dist = Math.hypot(thumb.x - index.x, thumb.y - index.y, (thumb.z ?? 0) - (index.z ?? 0));
+  const pinch = clamp(1 - dist / 0.28, 0, 1);
+  const color = `hsl(${200 - pinch * 160}, 85%, 62%)`;
+
+  ctxA.strokeStyle = color;
+  ctxA.lineWidth = 3;
+  ctxA.shadowColor = color; ctxA.shadowBlur = 12;
+  ctxA.beginPath(); ctxA.moveTo(tx, ty); ctxA.lineTo(ix, iy); ctxA.stroke();
+  ctxA.shadowBlur = 0;
+
+  [[tx, ty], [ix, iy]].forEach(([x, y]) => {
+    ctxA.beginPath(); ctxA.fillStyle = color; ctxA.arc(x, y, 6, 0, Math.PI * 2); ctxA.fill();
+  });
+
+  const mx = (tx + ix) / 2, my = (ty + iy) / 2;
+  ctxA.font = "600 13px 'Helvetica Neue', Arial, sans-serif";
+  ctxA.fillStyle = "#f1ecf7";
+  ctxA.textAlign = "center";
+  ctxA.save();
+  ctxA.translate(mx, my - 14);
+  ctxA.scale(-1, 1);
+  ctxA.fillText(`${(dist * 100).toFixed(1)} u.`, 0, 0);
+  ctxA.restore();
+
+  setStat("statA", pinch > 0.85 ? "dedos juntos (pinza)" : `distancia ${(dist * 100).toFixed(1)} u.`);
+}
+
+// --- A7. Orientación de la mano (flecha) --------------------------------------
+
+function drawHandOrientation(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+  const wrist = landmarks[0], middleMcp = landmarks[9], indexMcp = landmarks[5], pinkyMcp = landmarks[17];
+
+  // puntos tenues de contexto
+  [0, 5, 9, 13, 17].forEach((i) => {
+    const p = landmarks[i];
+    ctxA.beginPath(); ctxA.fillStyle = "rgba(241,236,247,0.35)";
+    ctxA.arc(p.x * w, p.y * h, 3, 0, Math.PI * 2); ctxA.fill();
+  });
+
+  const ox = wrist.x * w, oy = wrist.y * h;
+  const dirX = middleMcp.x - wrist.x, dirY = middleMcp.y - wrist.y;
+  const len = Math.hypot(dirX, dirY) || 1;
+  const scale = Math.min(w, h) * 0.5;
+  const ex = ox + (dirX / len) * scale, ey = oy + (dirY / len) * scale;
+
+  // vector normal (palma "hacia el lado") usando index-pinky MCP como referencia de ancho
+  const sideX = pinkyMcp.x - indexMcp.x, sideY = pinkyMcp.y - indexMcp.y;
+  const sideLen = Math.hypot(sideX, sideY) || 1;
+  const sx = ox + (sideX / sideLen) * scale * 0.35, sy = oy + (sideY / sideLen) * scale * 0.35;
+
+  // eje secundario (ancho de la palma), tenue
+  ctxA.strokeStyle = "rgba(167, 139, 250, 0.6)";
+  ctxA.lineWidth = 2.5;
+  ctxA.beginPath(); ctxA.moveTo(ox, oy); ctxA.lineTo(sx, sy); ctxA.stroke();
+
+  // flecha principal (dirección de la mano)
+  const angle = Math.atan2(ey - oy, ex - ox);
+  ctxA.strokeStyle = "#ff8a5c";
+  ctxA.lineWidth = 4;
+  ctxA.shadowColor = "#ff8a5c"; ctxA.shadowBlur = 14;
+  ctxA.beginPath(); ctxA.moveTo(ox, oy); ctxA.lineTo(ex, ey); ctxA.stroke();
+
+  const headLen = 14;
+  ctxA.beginPath();
+  ctxA.moveTo(ex, ey);
+  ctxA.lineTo(ex - headLen * Math.cos(angle - 0.4), ey - headLen * Math.sin(angle - 0.4));
+  ctxA.lineTo(ex - headLen * Math.cos(angle + 0.4), ey - headLen * Math.sin(angle + 0.4));
+  ctxA.closePath();
+  ctxA.fillStyle = "#ff8a5c";
+  ctxA.fill();
+  ctxA.shadowBlur = 0;
+
+  ctxA.beginPath(); ctxA.fillStyle = "#f1ecf7"; ctxA.arc(ox, oy, 5, 0, Math.PI * 2); ctxA.fill();
+
+  setStat("statA", `${Math.round(toDeg(angle))}°`);
+}
+
+// --- A8. Trayectoria de la mano (estela) --------------------------------------
+
+function drawHandTrail(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+  if (landmarks) {
+    const wrist = landmarks[0];
+    handTrailPoints.push({ x: wrist.x * w, y: wrist.y * h });
+    if (handTrailPoints.length > 70) handTrailPoints.shift();
+  }
+  if (handTrailPoints.length < 2) { setStat("statA", "trazando…"); return; }
+
+  for (let i = 1; i < handTrailPoints.length; i++) {
+    const p0 = handTrailPoints[i - 1], p1 = handTrailPoints[i];
+    const age = i / handTrailPoints.length;
+    ctxA.strokeStyle = `hsla(${190 + age * 90}, 85%, 65%, ${0.15 + age * 0.7})`;
+    ctxA.lineWidth = 1 + age * 5;
+    ctxA.lineCap = "round";
+    ctxA.beginPath(); ctxA.moveTo(p0.x, p0.y); ctxA.lineTo(p1.x, p1.y); ctxA.stroke();
+  }
+  const last = handTrailPoints[handTrailPoints.length - 1];
+  ctxA.beginPath();
+  ctxA.fillStyle = "#5ce1ff";
+  ctxA.shadowColor = "#5ce1ff"; ctxA.shadowBlur = 16;
+  ctxA.arc(last.x, last.y, 6, 0, Math.PI * 2);
+  ctxA.fill();
+  ctxA.shadowBlur = 0;
+
+  setStat("statA", `estela de ${handTrailPoints.length} posiciones`);
+}
+
+// --- A9. Orientación del rostro (gizmo de ejes) -------------------------------
+
+function drawFaceOrientation(landmarks, result) {
+  const w = canvasA.width, h = canvasA.height;
+  const nose = landmarks[1] || landmarks[4];
+  const ox = nose.x * w, oy = nose.y * h;
+  const scale = Math.min(w, h) * 0.22;
+
+  const matrixData = result.facialTransformationMatrixes && result.facialTransformationMatrixes[0];
+  let right = { x: 1, y: 0 }, up = { x: 0, y: -1 };
+  let yawDeg = 0, pitchDeg = 0;
+
+  if (matrixData && matrixData.data) {
+    const m = matrixData.data; // 4x4, column-major
+    right = { x: m[0], y: m[1] };
+    up = { x: m[4], y: m[5] };
+    const forward = { x: m[8], y: m[9], z: m[10] };
+    yawDeg = toDeg(Math.atan2(forward.x, forward.z || 1));
+    pitchDeg = toDeg(Math.atan2(-forward.y, forward.z || 1));
+  } else {
+    // respaldo simple si no hay matriz: usar el ancho ojo-ojo como eje "right"
+    const leftEye = landmarks[33], rightEye = landmarks[263];
+    if (leftEye && rightEye) {
+      right = { x: rightEye.x - leftEye.x, y: rightEye.y - leftEye.y };
+      const len = Math.hypot(right.x, right.y) || 1;
+      right = { x: right.x / len, y: right.y / len };
+      up = { x: -right.y, y: -right.x };
+    }
+  }
+
+  // malla mínima de referencia (óvalo del rostro), muy tenue
+  ctxA.strokeStyle = "rgba(241, 236, 247, 0.15)";
+  ctxA.lineWidth = 1.5;
+  [[10,234],[234,152],[152,454],[454,10]].forEach(([ia, ib]) => {
+    const a = landmarks[ia], b = landmarks[ib];
+    if (!a || !b) return;
+    ctxA.beginPath(); ctxA.moveTo(a.x * w, a.y * h); ctxA.lineTo(b.x * w, b.y * h); ctxA.stroke();
+  });
+
+  drawAxis(ox, oy, right.x, right.y, scale, "#ff5c8a");
+  drawAxis(ox, oy, up.x, up.y, scale, "#06d6a0");
+
+  ctxA.beginPath();
+  ctxA.fillStyle = "#f1ecf7";
+  ctxA.arc(ox, oy, 5, 0, Math.PI * 2);
+  ctxA.fill();
+
+  setStat("statA", `yaw ${yawDeg.toFixed(0)}° · pitch ${pitchDeg.toFixed(0)}°`);
+}
+
+function drawAxis(ox, oy, dx, dy, scale, color) {
+  const ex = ox + dx * scale, ey = oy + dy * scale;
+  ctxA.strokeStyle = color;
+  ctxA.lineWidth = 3.5;
+  ctxA.shadowColor = color; ctxA.shadowBlur = 12;
+  ctxA.beginPath(); ctxA.moveTo(ox, oy); ctxA.lineTo(ex, ey); ctxA.stroke();
+  const angle = Math.atan2(ey - oy, ex - ox);
+  const headLen = 10;
+  ctxA.beginPath();
+  ctxA.moveTo(ex, ey);
+  ctxA.lineTo(ex - headLen * Math.cos(angle - 0.4), ey - headLen * Math.sin(angle - 0.4));
+  ctxA.lineTo(ex - headLen * Math.cos(angle + 0.4), ey - headLen * Math.sin(angle + 0.4));
+  ctxA.closePath();
+  ctxA.fillStyle = color;
+  ctxA.fill();
+  ctxA.shadowBlur = 0;
+}
+
+// --- A10. Ojos y boca (contornos rellenos) ------------------------------------
+
+function drawEyesMouth(landmarks) {
+  const w = canvasA.width, h = canvasA.height;
+
+  // silueta general muy tenue como contexto
+  ctxA.strokeStyle = "rgba(241, 236, 247, 0.12)";
+  ctxA.lineWidth = 1.5;
+  [[10,234],[234,152],[152,454],[454,10]].forEach(([ia, ib]) => {
+    const a = landmarks[ia], b = landmarks[ib];
+    if (!a || !b) return;
+    ctxA.beginPath(); ctxA.moveTo(a.x * w, a.y * h); ctxA.lineTo(b.x * w, b.y * h); ctxA.stroke();
+  });
+
+  const eye = (outerI, innerI, upperI, lowerI, color) => {
+    const outer = landmarks[outerI], inner = landmarks[innerI], upper = landmarks[upperI], lower = landmarks[lowerI];
+    if (!outer || !inner || !upper || !lower) return 0;
+    const width = Math.hypot(outer.x - inner.x, outer.y - inner.y);
+    const heightV = Math.hypot(upper.x - lower.x, upper.y - lower.y);
+    const ratio = width > 0 ? clamp(heightV / width / 0.5, 0, 1) : 0;
+    const cx = ((outer.x + inner.x) / 2) * w, cy = ((upper.y + lower.y) / 2) * h;
+    const rx = (width * w) / 2, ry = Math.max(2, (heightV * h) / 2);
+    ctxA.beginPath();
+    ctxA.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctxA.fillStyle = color.replace("ALPHA", (0.25 + ratio * 0.6).toFixed(2));
+    ctxA.fill();
+    ctxA.strokeStyle = color.replace("ALPHA", "0.8");
+    ctxA.lineWidth = 1.5;
+    ctxA.stroke();
+    return ratio;
+  };
+
+  const eyeL = eye(33, 133, 159, 145, "rgba(92, 225, 255, ALPHA)");
+  const eyeR = eye(263, 362, 386, 374, "rgba(92, 225, 255, ALPHA)");
+
+  const mUpper = landmarks[13], mLower = landmarks[14], mLeft = landmarks[61], mRight = landmarks[291];
+  let mouthRatio = 0;
+  if (mUpper && mLower && mLeft && mRight) {
+    const mw = Math.hypot(mLeft.x - mRight.x, mLeft.y - mRight.y);
+    const mh = Math.hypot(mUpper.x - mLower.x, mUpper.y - mLower.y);
+    mouthRatio = mw > 0 ? clamp(mh / mw / 0.6, 0, 1) : 0;
+    const cx = ((mLeft.x + mRight.x) / 2) * w, cy = ((mUpper.y + mLower.y) / 2) * h;
+    const rx = (mw * w) / 2, ry = Math.max(3, (mh * h) / 2);
+    ctxA.beginPath();
+    ctxA.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctxA.fillStyle = `rgba(255, 138, 92, ${(0.25 + mouthRatio * 0.65).toFixed(2)})`;
+    ctxA.fill();
+    ctxA.strokeStyle = "rgba(255, 138, 92, 0.85)";
+    ctxA.lineWidth = 1.5;
+    ctxA.stroke();
+  }
+
+  setStat("statA", `ojos ${Math.round(((eyeL + eyeR) / 2) * 100)}% · boca ${Math.round(mouthRatio * 100)}%`);
+}
+
+// --- A11. Expresiones faciales (barras tipo ecualizador) ----------------------
+
+function drawFaceExpressions(result) {
+  const w = canvasA.width, h = canvasA.height;
+  const blend = result.faceBlendshapes && result.faceBlendshapes[0] && result.faceBlendshapes[0].categories;
+  if (!blend) { setStat("statA", "sin datos de expresión"); drawIdlePulse(ctxA, w, h); return; }
+
+  const get = (name) => (blend.find((c) => c.categoryName === name) || {}).score || 0;
+  const values = EXPRESSION_BARS.map((b) => get(b.key));
+
+  const marginX = 30, marginBottom = 46, topY = 26;
+  const chartH = h - topY - marginBottom;
+  const n = EXPRESSION_BARS.length;
+  const slot = (w - marginX * 2) / n;
+  const barW = slot * 0.5;
+
+  ctxA.strokeStyle = "rgba(241, 236, 247, 0.15)";
+  ctxA.lineWidth = 1;
+  ctxA.beginPath(); ctxA.moveTo(marginX, topY); ctxA.lineTo(marginX, topY + chartH); ctxA.lineTo(w - marginX, topY + chartH); ctxA.stroke();
+
+  EXPRESSION_BARS.forEach((b, i) => {
+    const v = clamp(values[i], 0, 1);
+    const bx = marginX + slot * i + (slot - barW) / 2;
+    const bh = chartH * v;
+    const by = topY + chartH - bh;
+    const hue = 20 + (i / n) * 260;
+    ctxA.fillStyle = `hsla(${hue}, 80%, 62%, ${0.35 + v * 0.6})`;
+    ctxA.shadowColor = `hsla(${hue}, 80%, 62%, 0.8)`;
+    ctxA.shadowBlur = 8;
+    ctxA.fillRect(bx, by, barW, Math.max(2, bh));
+    ctxA.shadowBlur = 0;
+
+    ctxA.font = "600 9px 'Helvetica Neue', Arial, sans-serif";
+    ctxA.fillStyle = "#a89fbd";
+    ctxA.textAlign = "center";
+    const lines = b.label.split("\n");
+    ctxA.save();
+    ctxA.translate(bx + barW / 2, topY + chartH + 12);
+    ctxA.scale(-1, 1);
+    lines.forEach((line, li) => ctxA.fillText(line, 0, li * 10));
+    ctxA.restore();
+  });
+
+  const top = EXPRESSION_BARS.map((b, i) => [b.label.replace("\n", " "), values[i]]).sort((a, b2) => b2[1] - a[1])[0];
+  setStat("statA", top[1] > 0.3 ? `${top[0]} ${Math.round(top[1] * 100)}%` : "expresión neutra");
+}
+
+// ---------------------------------------------------------------------------
+// SISTEMA B — despachador
+// ---------------------------------------------------------------------------
+
+function sampleGray(cols, rows) {
+  ctxHidden.canvas.width = cols; ctxHidden.canvas.height = rows;
+  ctxHidden.drawImage(video, 0, 0, cols, rows);
+  return ctxHidden.getImageData(0, 0, cols, rows).data;
+}
+
+function drawSystemB(pair) {
+  switch (pair.b.kind) {
+    case "motionParticles": return bMotionParticles();
+    case "opticalFlow": return bOpticalFlow();
+    case "houghLines": return bHoughLines();
+    case "threshold": return bThreshold();
+    case "cannyEdges": return bCannyEdges();
+    case "motionDial": return bMotionDial();
+    case "contours": return bContours();
+    case "bgSubtraction": return bBackgroundSubtraction();
+    case "histogram": return bHistogram();
+    case "hsvSpotlight": return bHsvSpotlight();
+    case "dominantColor": return bDominantColor();
+    case "luminosityGrid": return bLuminosityGrid();
+    default: return;
+  }
+}
+
+function clearBFading(alpha) {
+  const w = canvasB.width, h = canvasB.height;
+  ctxB.fillStyle = `rgba(5, 4, 10, ${alpha})`;
+  ctxB.fillRect(0, 0, w, h);
+}
+
+// --- B1. Movimiento entre frames — partículas --------------------------------
+
+function bMotionParticles() {
+  const w = canvasB.width, h = canvasB.height;
+  const frame = sampleGray(GW, GH);
+  const cellCount = GW * GH;
+  if (!prevLumaGridMotion) prevLumaGridMotion = new Float32Array(cellCount);
+  const cellW = w / GW, cellH = h / GH;
+  let activeCells = 0;
+
+  for (let i = 0; i < cellCount; i++) {
+    const px = i * 4;
+    const luma = 0.299 * frame[px] + 0.587 * frame[px + 1] + 0.114 * frame[px + 2];
+    const diff = Math.abs(luma - prevLumaGridMotion[i]);
+    prevLumaGridMotion[i] = luma;
+    if (diff > 9) {
+      activeCells++;
+      const col = i % GW, row = Math.floor(i / GW);
+      const spawnCount = Math.min(3, Math.round(diff / 22));
+      for (let s = 0; s < spawnCount; s++) {
+        spawnParticle((col + 0.5) * cellW + (Math.random() - 0.5) * cellW, (row + 0.5) * cellH + (Math.random() - 0.5) * cellH, diff);
+      }
+    }
+  }
+  setStat("statB", `${Math.round((activeCells / cellCount) * 100)}% en movimiento`);
+  clearBFading(0.16);
+  updateAndDrawParticles();
+}
+
+function spawnParticle(x, y, magnitude) {
+  const angle = Math.random() * Math.PI * 2;
+  const speed = 0.3 + Math.min(2.2, magnitude / 40);
+  const hue = clamp(250 - magnitude * 2.2, 20, 250);
+  const life = 40 + Math.random() * 50;
+  particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, hue, size: 1.4 + Math.min(3.5, magnitude / 20), life, maxLife: life });
+  if (particles.length > 900) particles.splice(0, particles.length - 900);
+}
+
+function updateAndDrawParticles() {
+  const w = canvasB.width, h = canvasB.height;
+  particles = particles.filter((p) => {
+    p.x += p.vx; p.y += p.vy; p.vx *= 0.97; p.vy *= 0.97; p.life--;
+    if (p.life <= 0 || p.x < -10 || p.x > w + 10 || p.y < -10 || p.y > h + 10) return false;
+    const alpha = p.life / p.maxLife;
+    ctxB.beginPath();
+    ctxB.fillStyle = `hsla(${p.hue}, 85%, 62%, ${alpha * 0.85})`;
+    ctxB.shadowColor = `hsla(${p.hue}, 85%, 62%, ${alpha})`;
+    ctxB.shadowBlur = 9;
+    ctxB.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctxB.fill();
+    return true;
+  });
+  ctxB.shadowBlur = 0;
+}
+
+// --- B2. Dirección del movimiento (block matching) ---------------------------
+
+function bOpticalFlow() {
+  const cols = 24, rows = 18;
+  const w = canvasB.width, h = canvasB.height;
+  const frame = sampleGray(cols * 4, rows * 4);
+  const fw = cols * 4, fh = rows * 4;
+  const lumas = new Float32Array(fw * fh);
+  for (let i = 0; i < fw * fh; i++) {
+    const px = i * 4;
+    lumas[i] = 0.299 * frame[px] + 0.587 * frame[px + 1] + 0.114 * frame[px + 2];
+  }
+  clearBFading(0.2);
+
+  if (!flowPrevBlocks) { flowPrevBlocks = lumas; setStat("statB", "calibrando…"); return; }
+
+  const blockSize = 4, search = 2;
+  const cellW = w / cols, cellH = h / rows;
+  let totalMag = 0;
+
+  for (let by = 0; by < rows; by++) {
+    for (let bx = 0; bx < cols; bx++) {
+      const x0 = bx * blockSize, y0 = by * blockSize;
+      let best = { dx: 0, dy: 0, score: Infinity };
+      for (let dy = -search; dy <= search; dy++) {
+        for (let dx = -search; dx <= search; dx++) {
+          let sad = 0;
+          for (let yy = 0; yy < blockSize; yy++) {
+            for (let xx = 0; xx < blockSize; xx++) {
+              const cx = x0 + xx, cy = y0 + yy;
+              const px = clamp(cx + dx, 0, fw - 1), py = clamp(cy + dy, 0, fh - 1);
+              sad += Math.abs(lumas[cy * fw + cx] - flowPrevBlocks[py * fw + px]);
+            }
+          }
+          if (sad < best.score) best = { dx, dy, score: sad };
+        }
+      }
+      const mag = Math.hypot(best.dx, best.dy);
+      totalMag += mag;
+      if (mag > 0.6) {
+        const cx = (bx + 0.5) * cellW, cy = (by + 0.5) * cellH;
+        const angle = Math.atan2(best.dy, best.dx);
+        const len = 6 + mag * 5;
+        const hue = ((angle + Math.PI) / (Math.PI * 2)) * 360;
+        ctxB.strokeStyle = `hsla(${hue}, 80%, 62%, 0.85)`;
+        ctxB.shadowColor = `hsla(${hue}, 80%, 62%, 0.85)`;
+        ctxB.shadowBlur = 6;
+        ctxB.lineWidth = 2;
+        ctxB.beginPath();
+        ctxB.moveTo(cx, cy);
+        ctxB.lineTo(cx + Math.cos(angle) * len, cy + Math.sin(angle) * len);
+        ctxB.stroke();
+      }
+    }
+  }
+  ctxB.shadowBlur = 0;
+  flowPrevBlocks = lumas;
+  setStat("statB", `energía de flujo ${totalMag.toFixed(0)}`);
+}
+
+// --- B3. Líneas — OpenCV.js HoughLinesP --------------------------------------
+
+function bHoughLines() {
+  const w = canvasB.width, h = canvasB.height;
+  const cv = window.cv;
+  if (!cv || !cv.Mat) { setStat("statB", "cargando OpenCV.js…"); clearBFading(1); return; }
+
+  const pw = 160, ph = 120;
+  ctxCv.canvas.width = pw; ctxCv.canvas.height = ph;
+  ctxCv.drawImage(video, 0, 0, pw, ph);
+  const src = cv.imread(ctxCv.canvas);
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const edges = new cv.Mat();
+  cv.Canny(gray, edges, 50, 120);
+  const lines = new cv.Mat();
+  cv.HoughLinesP(edges, lines, 1, Math.PI / 180, 30, 18, 6);
+
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  const stepX = w / pw, stepY = h / ph;
+  const count = lines.rows;
+  for (let i = 0; i < count; i++) {
+    const x1 = lines.data32S[i * 4] * stepX, y1 = lines.data32S[i * 4 + 1] * stepY;
+    const x2 = lines.data32S[i * 4 + 2] * stepX, y2 = lines.data32S[i * 4 + 3] * stepY;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    const hue = ((angle + Math.PI) / (Math.PI * 2)) * 360;
+    ctxB.strokeStyle = `hsla(${hue}, 80%, 65%, 0.9)`;
+    ctxB.shadowColor = `hsla(${hue}, 80%, 65%, 0.9)`;
+    ctxB.shadowBlur = 5;
+    ctxB.lineWidth = 2;
+    ctxB.beginPath(); ctxB.moveTo(x1, y1); ctxB.lineTo(x2, y2); ctxB.stroke();
+  }
+  ctxB.shadowBlur = 0;
+  setStat("statB", `${count} líneas detectadas`);
+  src.delete(); gray.delete(); edges.delete(); lines.delete();
+}
+
+// --- B4. Threshold — OpenCV.js adaptiveThreshold (imagen completa) ----------
+
+function bThreshold() {
+  const w = canvasB.width, h = canvasB.height;
+  const cv = window.cv;
+  if (!cv || !cv.Mat) { setStat("statB", "cargando OpenCV.js…"); clearBFading(1); return; }
+
+  const pw = 200, ph = 150;
+  ctxCv.canvas.width = pw; ctxCv.canvas.height = ph;
+  ctxCv.drawImage(video, 0, 0, pw, ph);
+  const src = cv.imread(ctxCv.canvas);
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const bin = new cv.Mat();
+  cv.adaptiveThreshold(gray, bin, 255, cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 21, 8);
+
+  const tmp = document.createElement("canvas");
+  tmp.width = pw; tmp.height = ph;
+  cv.imshow(tmp, bin);
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  ctxB.imageSmoothingEnabled = false;
+  ctxB.drawImage(tmp, 0, 0, w, h);
+
+  let onCount = 0;
+  const data = bin.data;
+  for (let i = 0; i < data.length; i++) if (data[i] > 0) onCount++;
+  setStat("statB", `${Math.round((onCount / data.length) * 100)}% claro`);
+  src.delete(); gray.delete(); bin.delete();
+}
+
+// --- B5. Bordes (Canny) — imagen completa ------------------------------------
+
+function bCannyEdges() {
+  const w = canvasB.width, h = canvasB.height;
+  const cv = window.cv;
+  if (!cv || !cv.Mat) { setStat("statB", "cargando OpenCV.js…"); clearBFading(1); return; }
+
+  const pw = 220, ph = 165;
+  ctxCv.canvas.width = pw; ctxCv.canvas.height = ph;
+  ctxCv.drawImage(video, 0, 0, pw, ph);
+  const src = cv.imread(ctxCv.canvas);
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const edges = new cv.Mat();
+  cv.Canny(gray, edges, 60, 130);
+
+  const tmp = document.createElement("canvas");
+  tmp.width = pw; tmp.height = ph;
+  cv.imshow(tmp, edges);
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  ctxB.globalCompositeOperation = "lighter";
+  ctxB.filter = "hue-rotate(150deg) saturate(2)";
+  ctxB.drawImage(tmp, 0, 0, w, h);
+  ctxB.filter = "none";
+  ctxB.globalCompositeOperation = "source-over";
+
+  let count = 0;
+  const data = edges.data;
+  for (let i = 0; i < data.length; i++) if (data[i] > 0) count++;
+  setStat("statB", `${count} px de borde`);
+  src.delete(); gray.delete(); edges.delete();
+}
+
+// --- B6. Cantidad de movimiento — dial/medidor -------------------------------
+
+function bMotionDial() {
+  const w = canvasB.width, h = canvasB.height;
+  const frame = sampleGray(GW, GH);
+  const cellCount = GW * GH;
+  if (!prevLumaGridDial) prevLumaGridDial = new Float32Array(cellCount);
+  let diffSum = 0;
+  for (let i = 0; i < cellCount; i++) {
+    const px = i * 4;
+    const luma = 0.299 * frame[px] + 0.587 * frame[px + 1] + 0.114 * frame[px + 2];
+    diffSum += Math.abs(luma - prevLumaGridDial[i]);
+    prevLumaGridDial[i] = luma;
+  }
+  const raw = clamp(diffSum / cellCount / 30, 0, 1);
+  motionEMA = motionEMA * 0.85 + raw * 0.15;
+
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2, r = Math.min(w, h) * 0.3;
+  const start = Math.PI * 0.75, end = Math.PI * 2.25;
+
+  ctxB.lineWidth = 16;
+  ctxB.lineCap = "round";
+  ctxB.strokeStyle = "rgba(241, 236, 247, 0.12)";
+  ctxB.beginPath(); ctxB.arc(cx, cy, r, start, end); ctxB.stroke();
+
+  const color = `hsl(${200 - motionEMA * 180}, 85%, 60%)`;
+  ctxB.strokeStyle = color;
+  ctxB.shadowColor = color; ctxB.shadowBlur = 18;
+  ctxB.beginPath(); ctxB.arc(cx, cy, r, start, start + (end - start) * motionEMA); ctxB.stroke();
+  ctxB.shadowBlur = 0;
+
+  ctxB.font = "700 30px 'Helvetica Neue', Arial, sans-serif";
+  ctxB.fillStyle = "#f1ecf7";
+  ctxB.textAlign = "center";
+  ctxB.save();
+  ctxB.translate(cx, cy + 10);
+  ctxB.scale(-1, 1);
+  ctxB.fillText(`${Math.round(motionEMA * 100)}%`, 0, 0);
+  ctxB.restore();
+
+  setStat("statB", `${Math.round(motionEMA * 100)}% de la escena cambiando`);
+}
+
+// --- B7. Contornos — OpenCV.js findContours (trazos vectoriales) ------------
+
+function bContours() {
+  const w = canvasB.width, h = canvasB.height;
+  const cv = window.cv;
+  if (!cv || !cv.Mat) { setStat("statB", "cargando OpenCV.js…"); clearBFading(1); return; }
+
+  const pw = 160, ph = 120;
+  ctxCv.canvas.width = pw; ctxCv.canvas.height = ph;
+  ctxCv.drawImage(video, 0, 0, pw, ph);
+  const src = cv.imread(ctxCv.canvas);
+  const gray = new cv.Mat();
+  cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+  const edges = new cv.Mat();
+  cv.Canny(gray, edges, 50, 120);
+  const contours = new cv.MatVector();
+  const hierarchy = new cv.Mat();
+  cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  const stepX = w / pw, stepY = h / ph;
+  const hues = [18, 190, 42, 265, 340];
+  let drawn = 0;
+  for (let i = 0; i < contours.size(); i++) {
+    const c = contours.get(i);
+    if (c.rows < 6) { c.delete(); continue; }
+    drawn++;
+    const hue = hues[i % hues.length];
+    ctxB.beginPath();
+    ctxB.strokeStyle = `hsla(${hue}, 85%, 65%, 0.9)`;
+    ctxB.shadowColor = `hsla(${hue}, 85%, 65%, 0.9)`;
+    ctxB.shadowBlur = 6;
+    ctxB.lineWidth = 1.5;
+    for (let p = 0; p < c.rows; p++) {
+      const px = c.data32S[p * 2] * stepX, py = c.data32S[p * 2 + 1] * stepY;
+      if (p === 0) ctxB.moveTo(px, py); else ctxB.lineTo(px, py);
+    }
+    ctxB.closePath();
+    ctxB.stroke();
+    c.delete();
+  }
+  ctxB.shadowBlur = 0;
+  setStat("statB", `${drawn} contornos`);
+  src.delete(); gray.delete(); edges.delete(); contours.delete(); hierarchy.delete();
+}
+
+// --- B8. Sustracción de fondo — OpenCV.js BackgroundSubtractorMOG2 ----------
+
+function bBackgroundSubtraction() {
+  const w = canvasB.width, h = canvasB.height;
+  const cv = window.cv;
+  if (!cv || !cv.Mat) { setStat("statB", "cargando OpenCV.js…"); clearBFading(1); return; }
+
+  const pw = 160, ph = 120;
+  ctxCv.canvas.width = pw; ctxCv.canvas.height = ph;
+  ctxCv.drawImage(video, 0, 0, pw, ph);
+  const src = cv.imread(ctxCv.canvas);
+
+  try {
+    if (!bgSubtractor) {
+      bgSubtractor = new cv.BackgroundSubtractorMOG2(300, 40, false);
+    }
+    const fgMask = new cv.Mat();
+    bgSubtractor.apply(src, fgMask);
+
+    const tmp = document.createElement("canvas");
+    tmp.width = pw; tmp.height = ph;
+    cv.imshow(tmp, fgMask);
+    ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+    ctxB.globalCompositeOperation = "lighter";
+    ctxB.filter = "hue-rotate(60deg) saturate(2.5)";
+    ctxB.drawImage(tmp, 0, 0, w, h);
+    ctxB.filter = "none";
+    ctxB.globalCompositeOperation = "source-over";
+
+    let fg = 0;
+    for (let i = 0; i < fgMask.data.length; i++) if (fgMask.data[i] > 0) fg++;
+    setStat("statB", `${Math.round((fg / fgMask.data.length) * 100)}% distinto del fondo`);
+    fgMask.delete();
+  } catch (err) {
+    console.warn("BackgroundSubtractorMOG2 no disponible, usando respaldo JS", err);
+    bBgSubFallback();
+  }
+  src.delete();
+}
+
+function bBgSubFallback() {
+  const cols = 48, rows = 36;
+  const w = canvasB.width, h = canvasB.height;
+  const frame = sampleGray(cols, rows);
+  const cellCount = cols * rows;
+  if (!bgAvgGrid) {
+    bgAvgGrid = new Float32Array(cellCount);
+    for (let i = 0; i < cellCount; i++) {
+      const px = i * 4;
+      bgAvgGrid[i] = 0.299 * frame[px] + 0.587 * frame[px + 1] + 0.114 * frame[px + 2];
+    }
+  }
+  const cellW = w / cols, cellH = h / rows;
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  let changed = 0;
+  for (let i = 0; i < cellCount; i++) {
+    const px = i * 4;
+    const luma = 0.299 * frame[px] + 0.587 * frame[px + 1] + 0.114 * frame[px + 2];
+    const diff = Math.abs(luma - bgAvgGrid[i]);
+    bgAvgGrid[i] = bgAvgGrid[i] * 0.97 + luma * 0.03;
+    if (diff > 14) {
+      changed++;
+      const col = i % cols, row = Math.floor(i / cols);
+      ctxB.fillStyle = "#06d6a0";
+      ctxB.fillRect(col * cellW, row * cellH, cellW + 1, cellH + 1);
+    }
+  }
+  setStat("statB", `${Math.round((changed / cellCount) * 100)}% distinto del fondo (respaldo)`);
+}
+
+// --- B9. Histograma RGB — Canvas 2D ------------------------------------------
+
+function bHistogram() {
+  const w = canvasB.width, h = canvasB.height;
+  const cols = 64, rows = 48;
+  const frame = sampleGray(cols, rows);
+  const bins = 24;
+  const histR = new Array(bins).fill(0), histG = new Array(bins).fill(0), histB = new Array(bins).fill(0);
+  for (let i = 0; i < cols * rows; i++) {
+    const px = i * 4;
+    histR[Math.min(bins - 1, Math.floor((frame[px] / 256) * bins))]++;
+    histG[Math.min(bins - 1, Math.floor((frame[px + 1] / 256) * bins))]++;
+    histB[Math.min(bins - 1, Math.floor((frame[px + 2] / 256) * bins))]++;
+  }
+  const maxVal = Math.max(...histR, ...histG, ...histB, 1);
+  if (!histSmoothed) histSmoothed = { r: histR.slice(), g: histG.slice(), b: histB.slice() };
+  ["r", "g", "b"].forEach((ch) => {
+    const src = ch === "r" ? histR : ch === "g" ? histG : histB;
+    for (let i = 0; i < bins; i++) histSmoothed[ch][i] = histSmoothed[ch][i] * 0.7 + src[i] * 0.3;
+  });
+
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  const marginX = 24, marginBottom = 20, topY = 20;
+  const chartH = h - topY - marginBottom;
+  const slot = (w - marginX * 2) / bins;
+
+  const drawChannel = (arr, color) => {
+    ctxB.beginPath();
+    ctxB.moveTo(marginX, topY + chartH);
+    for (let i = 0; i < bins; i++) {
+      const x = marginX + i * slot + slot / 2;
+      const y = topY + chartH - (arr[i] / maxVal) * chartH;
+      ctxB.lineTo(x, y);
+    }
+    ctxB.lineTo(marginX + bins * slot, topY + chartH);
+    ctxB.closePath();
+    ctxB.fillStyle = color;
+    ctxB.fill();
+  };
+  ctxB.globalCompositeOperation = "lighter";
+  ctxB.globalAlpha = 0.75;
+  drawChannel(histSmoothed.r, "#ff5c5c");
+  drawChannel(histSmoothed.g, "#5cff8a");
+  drawChannel(histSmoothed.b, "#5c8aff");
+  ctxB.globalAlpha = 1;
+  ctxB.globalCompositeOperation = "source-over";
+
+  setStat("statB", "distribución de color en vivo");
+}
+
+// --- B10. Rango de color (HSV) — OpenCV.js inRange, spotlight ---------------
+
+function bHsvSpotlight() {
+  const w = canvasB.width, h = canvasB.height;
+  const cv = window.cv;
+  if (!cv || !cv.Mat) { setStat("statB", "cargando OpenCV.js…"); clearBFading(1); return; }
+
+  const pw = 160, ph = 120;
+  ctxCv.canvas.width = pw; ctxCv.canvas.height = ph;
+  ctxCv.drawImage(video, 0, 0, pw, ph);
+  const src = cv.imread(ctxCv.canvas);
+  const rgb = new cv.Mat();
+  cv.cvtColor(src, rgb, cv.COLOR_RGBA2RGB);
+  const hsv = new cv.Mat();
+  cv.cvtColor(rgb, hsv, cv.COLOR_RGB2HSV);
+
+  // rango de tonos cálidos (piel / objetos naranjos-rojizos), típico de demos de detección de color
+  const low1 = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [0, 40, 60, 0]);
+  const high1 = new cv.Mat(hsv.rows, hsv.cols, hsv.type(), [25, 200, 255, 255]);
+  const mask = new cv.Mat();
+  cv.inRange(hsv, low1, high1, mask);
+
+  const gray = new cv.Mat();
+  cv.cvtColor(rgb, gray, cv.COLOR_RGB2GRAY);
+  const grayRgba = new cv.Mat();
+  cv.cvtColor(gray, grayRgba, cv.COLOR_GRAY2RGBA);
+  const rgba = new cv.Mat();
+  cv.cvtColor(rgb, rgba, cv.COLOR_RGB2RGBA);
+  rgba.copyTo(grayRgba, mask);
+
+  const tmp = document.createElement("canvas");
+  tmp.width = pw; tmp.height = ph;
+  cv.imshow(tmp, grayRgba);
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  ctxB.drawImage(tmp, 0, 0, w, h);
+
+  let matched = 0;
+  for (let i = 0; i < mask.data.length; i++) if (mask.data[i] > 0) matched++;
+  setStat("statB", `${Math.round((matched / mask.data.length) * 100)}% en rango (tonos cálidos)`);
+
+  src.delete(); rgb.delete(); hsv.delete(); low1.delete(); high1.delete(); mask.delete();
+  gray.delete(); grayRgba.delete(); rgba.delete();
+}
+
+// --- B11. Color dominante — Canvas 2D (bloque grande) ------------------------
+
+const COLOR_NAMES = [
+  [0, "rojo"], [30, "naranjo"], [55, "amarillo"], [90, "verde"],
+  [170, "cian"], [220, "azul"], [270, "violeta"], [320, "magenta"], [360, "rojo"],
+];
+function nameForHue(hue) {
+  for (let i = 0; i < COLOR_NAMES.length - 1; i++) {
+    if (hue >= COLOR_NAMES[i][0] && hue < COLOR_NAMES[i + 1][0]) return COLOR_NAMES[i][1];
+  }
+  return "rojo";
+}
+
+function bDominantColor() {
+  const w = canvasB.width, h = canvasB.height;
+  const cols = 24, rows = 18;
+  const frame = sampleGray(cols, rows);
+  let r = 0, g = 0, b = 0, n = cols * rows;
+  for (let i = 0; i < n; i++) {
+    const px = i * 4;
+    r += frame[px]; g += frame[px + 1]; b += frame[px + 2];
+  }
+  r /= n; g /= n; b /= n;
+  if (!dominantSmoothed) dominantSmoothed = { r, g, b };
+  dominantSmoothed.r += (r - dominantSmoothed.r) * 0.08;
+  dominantSmoothed.g += (g - dominantSmoothed.g) * 0.08;
+  dominantSmoothed.b += (b - dominantSmoothed.b) * 0.08;
+
+  const R = dominantSmoothed.r, G = dominantSmoothed.g, B = dominantSmoothed.b;
+  const max = Math.max(R, G, B), min = Math.min(R, G, B);
+  let hue = 0;
+  if (max !== min) {
+    if (max === R) hue = ((G - B) / (max - min)) % 6;
+    else if (max === G) hue = (B - R) / (max - min) + 2;
+    else hue = (R - G) / (max - min) + 4;
+    hue *= 60;
+    if (hue < 0) hue += 360;
+  }
+  const sat = max === 0 ? 0 : (max - min) / max;
+
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  const cx = w / 2, cy = h / 2;
+  const pulse = 1 + Math.sin(performance.now() / 400) * 0.03;
+  const radius = Math.min(w, h) * 0.28 * pulse;
+  ctxB.beginPath();
+  ctxB.fillStyle = `rgb(${R.toFixed(0)}, ${G.toFixed(0)}, ${B.toFixed(0)})`;
+  ctxB.shadowColor = `rgb(${R.toFixed(0)}, ${G.toFixed(0)}, ${B.toFixed(0)})`;
+  ctxB.shadowBlur = 40;
+  ctxB.arc(cx, cy, radius, 0, Math.PI * 2);
+  ctxB.fill();
+  ctxB.shadowBlur = 0;
+
+  const hex = "#" + [R, G, B].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, "0")).join("");
+  const label = sat < 0.12 ? "gris / neutro" : nameForHue(hue);
+
+  ctxB.font = "600 15px 'Helvetica Neue', Arial, sans-serif";
+  ctxB.fillStyle = "#f1ecf7";
+  ctxB.textAlign = "center";
+  ctxB.save();
+  ctxB.translate(cx, cy + radius + 28);
+  ctxB.scale(-1, 1);
+  ctxB.fillText(`${label} · ${hex}`, 0, 0);
+  ctxB.restore();
+
+  setStat("statB", `${label} (${hex})`);
+}
+
+// --- B12. Luminosidad — Canvas 2D (grilla de celdas) -------------------------
+
+function bLuminosityGrid() {
+  const w = canvasB.width, h = canvasB.height;
+  const cols = 26, rows = 20;
+  const frame = sampleGray(cols, rows);
+  const cellW = w / cols, cellH = h / rows;
+  ctxB.fillStyle = "#05040a"; ctxB.fillRect(0, 0, w, h);
+  let total = 0;
+  for (let i = 0; i < cols * rows; i++) {
+    const px = i * 4;
+    const luma = (0.299 * frame[px] + 0.587 * frame[px + 1] + 0.114 * frame[px + 2]) / 255;
+    total += luma;
+    const col = i % cols, row = Math.floor(i / cols);
+    ctxB.fillStyle = `rgba(255, 214, 130, ${0.1 + luma * 0.85})`;
+    ctxB.fillRect(col * cellW, row * cellH, cellW + 1, cellH + 1);
+  }
+  setStat("statB", `brillo prom. ${Math.round((total / (cols * rows)) * 100)}%`);
+}
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+
+buildPairsGrid();
+updateLabels();
+</script>
+</body>
+</html>
